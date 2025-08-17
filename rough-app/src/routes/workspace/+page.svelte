@@ -118,6 +118,25 @@
 		goto('/');
 	}
 
+	function disconnectAPI() {
+		// Remove API-related data
+		localStorage.removeItem('apiKey');
+		localStorage.removeItem('pineconeConnected');
+
+		// Show success animation
+		anime({
+			targets: '.disconnect-btn',
+			scale: [1, 1.2, 1],
+			duration: 300,
+			easing: 'easeOutBounce'
+		});
+
+		// Redirect after animation
+		setTimeout(() => {
+			goto('/');
+		}, 500);
+	}
+
 	// Drag and drop functions
 	function handleDragStart(event, todo) {
 		draggedItem = todo;
