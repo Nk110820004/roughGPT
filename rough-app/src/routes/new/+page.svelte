@@ -35,7 +35,7 @@
 </script>
 
 <main class="container">
-	<textarea id="textbox" cols="30" rows="30" placeholder="Write Here!" oninput={resizeTextarea}></textarea>
+	<textarea id="textbox" cols="30" rows="30" placeholder="Write Here!" on:input={resizeTextarea}></textarea>
 	<button class="save-btn" onclick={insertNote}>Save</button>
 </main>
 
