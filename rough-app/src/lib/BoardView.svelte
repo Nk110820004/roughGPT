@@ -1,7 +1,9 @@
 <script>
-	let { 
-		todos = [], 
-		onUpdateTodo = () => {}, 
+	import AnimatedIcon from './AnimatedIcon.svelte';
+
+	let {
+		todos = [],
+		onUpdateTodo = () => {},
 		onDeleteTodo = () => {},
 		categories = []
 	} = $props();
