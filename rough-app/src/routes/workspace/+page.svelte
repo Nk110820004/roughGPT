@@ -832,6 +832,41 @@
 		line-height: 1.5;
 	}
 
+	/* Rich text styling in tasks */
+	.task-text :global(h1),
+	.task-text :global(h2),
+	.task-text :global(h3) {
+		margin: 0.5rem 0;
+		font-size: 1rem;
+		font-weight: 600;
+	}
+
+	.task-text :global(p) {
+		margin: 0.25rem 0;
+	}
+
+	.task-text :global(ul),
+	.task-text :global(ol) {
+		margin: 0.25rem 0;
+		padding-left: 1rem;
+	}
+
+	.task-text :global(blockquote) {
+		border-left: 3px solid var(--primary);
+		padding-left: 0.75rem;
+		margin: 0.25rem 0;
+		font-style: italic;
+		opacity: 0.8;
+	}
+
+	.task-text :global(pre) {
+		background: var(--background);
+		padding: 0.5rem;
+		border-radius: 4px;
+		font-size: 0.875rem;
+		overflow-x: auto;
+	}
+
 	.task-item.completed .task-text {
 		text-decoration: line-through;
 		color: var(--text-muted);
