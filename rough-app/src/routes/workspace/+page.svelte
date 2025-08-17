@@ -396,6 +396,28 @@
 		min-height: 100vh;
 		background: var(--background);
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.workspace-container::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg,
+			rgba(99, 102, 241, 0.1) 0%,
+			rgba(236, 72, 153, 0.1) 35%,
+			rgba(245, 158, 11, 0.1) 70%,
+			rgba(16, 185, 129, 0.1) 100%);
+		z-index: 0;
+	}
+
+	.sidebar, .main-content {
+		position: relative;
+		z-index: 1;
 	}
 
 	/* Sidebar */
