@@ -253,7 +253,7 @@
 					placeholder="Add a new task..."
 					bind:value={newTodo}
 					class="new-task-input"
-					on:keypress={(e) => e.key === 'Enter' && addTodo()}
+					onkeypress={(e) => e.key === 'Enter' && addTodo()}
 				/>
 				
 				<select bind:value={selectedTodoCategory} class="category-select">
