@@ -172,6 +172,37 @@
 		}
 		userName = savedName;
 		loadTodos();
+
+		// Entry animations
+		anime.timeline({
+			easing: 'easeOutExpo'
+		})
+		.add({
+			targets: '.sidebar',
+			translateX: [-280, 0],
+			opacity: [0, 1],
+			duration: 800
+		})
+		.add({
+			targets: '.main-content',
+			translateX: [50, 0],
+			opacity: [0, 1],
+			duration: 600
+		}, '-=400')
+		.add({
+			targets: '.category-item',
+			translateX: [-20, 0],
+			opacity: [0, 1],
+			duration: 400,
+			delay: anime.stagger(100)
+		}, '-=300')
+		.add({
+			targets: '.task-item',
+			scale: [0.8, 1],
+			opacity: [0, 1],
+			duration: 500,
+			delay: anime.stagger(50)
+		}, '-=200');
 	});
 </script>
 
