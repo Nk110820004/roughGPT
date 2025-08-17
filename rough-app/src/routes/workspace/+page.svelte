@@ -314,9 +314,9 @@
 										type="text"
 										bind:value={editText}
 										class="edit-input"
-										on:keypress={(e) => e.key === 'Enter' && saveEdit()}
-										on:keydown={(e) => e.key === 'Escape' && cancelEdit()}
-										on:blur={saveEdit}
+										onkeypress={(e) => e.key === 'Enter' && saveEdit()}
+										onkeydown={(e) => e.key === 'Escape' && cancelEdit()}
+										onblur={saveEdit}
 										autofocus
 									/>
 								{:else}
