@@ -866,16 +866,40 @@
 		gap: 1rem;
 		padding: 1.5rem;
 		background: var(--surface);
-		border-radius: 16px;
-		border-left: 4px solid var(--category-color);
+		border-radius: 20px;
+		border-left: 6px solid var(--category-color);
 		box-shadow: var(--shadow);
 		transition: all 0.3s ease;
 		cursor: grab;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.task-item::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(135deg,
+			rgba(99, 102, 241, 0.02) 0%,
+			rgba(236, 72, 153, 0.02) 50%,
+			rgba(245, 158, 11, 0.02) 100%);
+		z-index: -1;
 	}
 
 	.task-item:hover {
-		transform: translateY(-2px);
-		box-shadow: var(--shadow-lg);
+		transform: translateY(-4px) scale(1.01);
+		box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+		border-left-width: 8px;
+	}
+
+	.task-item:hover::before {
+		background: linear-gradient(135deg,
+			rgba(99, 102, 241, 0.05) 0%,
+			rgba(236, 72, 153, 0.05) 50%,
+			rgba(245, 158, 11, 0.05) 100%);
 	}
 
 	.task-item.completed {
