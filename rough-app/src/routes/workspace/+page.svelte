@@ -381,11 +381,19 @@
 
 							<div class="task-actions">
 								{#if editingId === todo.id}
-									<button onclick={saveEdit} class="action-btn save">✓</button>
-									<button onclick={cancelEdit} class="action-btn cancel">✕</button>
+									<button onclick={saveEdit} class="action-btn save">
+										<AnimatedIcon name="check" size={16} bounce={true} />
+									</button>
+									<button onclick={cancelEdit} class="action-btn cancel">
+										<AnimatedIcon name="close" size={16} />
+									</button>
 								{:else}
-									<button onclick={() => startEdit(todo)} class="action-btn edit">✏️</button>
-									<button onclick={() => deleteTodo(todo.id)} class="action-btn delete">🗑️</button>
+									<button onclick={() => startEdit(todo)} class="action-btn edit">
+										<AnimatedIcon name="edit" size={16} hoverScale={1.2} />
+									</button>
+									<button onclick={() => deleteTodo(todo.id)} class="action-btn delete">
+										<AnimatedIcon name="delete" size={16} hoverScale={1.2} rotation={true} />
+									</button>
 								{/if}
 							</div>
 						</div>
