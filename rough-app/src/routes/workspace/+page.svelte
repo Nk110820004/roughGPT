@@ -1,6 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import RichTextEditor from '$lib/RichTextEditor.svelte';
+	import BoardView from '$lib/BoardView.svelte';
 
 	let userName = $state('');
 	let todos = $state([]);
