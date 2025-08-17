@@ -3,7 +3,7 @@ import { browser } from '$app/environment';
 /** @type {import('./$types').PageLoad} */
 export function load() {
 	// Preload data for better performance
-	const title = 'TaskFlow';
+	const title = 'TaskFlow - Beautiful Task Management';
 	const description = 'Your beautiful, organized workspace for everything';
 	
 	// Check if user is already logged in (only in browser)
