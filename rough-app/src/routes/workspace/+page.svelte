@@ -207,8 +207,13 @@
 		</nav>
 
 		<div class="sidebar-footer">
+			<button class="disconnect-btn" onclick={disconnectAPI}>
+				<AnimatedIcon name="disconnect" size={20} rotation={true} />
+				Disconnect API
+			</button>
 			<button class="logout-btn" onclick={logout}>
-				<span>🚪</span> Sign Out
+				<AnimatedIcon name="logout" size={20} bounce={true} />
+				Sign Out
 			</button>
 		</div>
 	</aside>
