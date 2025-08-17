@@ -293,7 +293,8 @@
 				</select>
 				
 				<button onclick={addTodo} class="add-task-btn" disabled={!newTodo.trim()}>
-					Add Task
+					<AnimatedIcon name="add" size={20} rotation={true} />
+					<span>Add Task</span>
 				</button>
 			</div>
 		</div>
