@@ -261,7 +261,7 @@
 			</div>
 		</div>
 
-		<!-- Tasks List -->
+		<!-- Tasks Display -->
 		<div class="tasks-container">
 			{#if filteredTodos.length === 0}
 				<div class="empty-state">
@@ -271,6 +271,13 @@
 						{searchQuery ? 'Try adjusting your search terms' : 'Create your first task to get started!'}
 					</p>
 				</div>
+			{:else if currentView === 'board'}
+				<BoardView
+					todos={filteredTodos}
+					categories={categories}
+					onUpdateTodo={updateTodo}
+					onDeleteTodo={deleteTodo}
+				/>
 			{:else}
 				<div class="tasks-list">
 					{#each filteredTodos as todo (todo.id)}
