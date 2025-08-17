@@ -44,11 +44,11 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	
 	<!-- Optimize font loading -->
-	<link 
-		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" 
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
 		rel="stylesheet"
 		media="print"
-		onload="this.media='all'"
+		on:load={(e) => e.target.media = 'all'}
 	/>
 	
 	<!-- Favicon -->
