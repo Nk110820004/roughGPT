@@ -448,6 +448,9 @@
 			{/if}
 		</div>
 	</main>
+
+	<!-- Floating Action Button for quick task creation -->
+	<FloatingActionButton onclick={quickAddTask} />
 </div>
 
 <style>
