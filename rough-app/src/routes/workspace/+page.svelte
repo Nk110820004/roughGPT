@@ -30,12 +30,12 @@
 	let selectedTodoPriority = $state('medium');
 
 	// Filtered todos based on search and category
-	$: filteredTodos = todos.filter(todo => {
+	let filteredTodos = $derived(todos.filter(todo => {
 		const matchesSearch = todo.text.toLowerCase().includes(searchQuery.toLowerCase());
 		const matchesCategory = selectedCategory === 'all' || todo.category === selectedCategory;
 		const matchesCompletion = showCompleted || !todo.completed;
 		return matchesSearch && matchesCategory && matchesCompletion;
-	});
+	}));
 
 	function addTodo() {
 		const todoText = showRichEditor ? newTodoRichText : newTodo;
