@@ -73,8 +73,8 @@
 		<div 
 			class="column"
 			style="--column-color: {column.color}"
-			on:dragover={handleDragOver}
-			on:drop={(e) => handleDrop(e, column.id)}
+			ondragover={handleDragOver}
+			ondrop={(e) => handleDrop(e, column.id)}
 			role="region"
 			aria-label="{column.title} column"
 		>
