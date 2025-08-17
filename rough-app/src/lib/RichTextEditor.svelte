@@ -202,8 +202,8 @@
 		class="rich-editor"
 		contenteditable="true"
 		data-placeholder={placeholder}
-		oninput={handleInput}
-		onkeydown={handleKeydown}
+		on:input={handleInput}
+		on:keydown={handleKeydown}
 		role="textbox"
 		aria-multiline="true"
 		tabindex="0"
