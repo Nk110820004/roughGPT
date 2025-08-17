@@ -788,26 +788,52 @@
 	}
 
 	.add-task-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
 		padding: 1rem 2rem;
 		background: linear-gradient(135deg, var(--primary), var(--secondary));
 		color: white;
 		border: none;
-		border-radius: 12px;
+		border-radius: 16px;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		box-shadow: var(--shadow);
+		box-shadow: var(--shadow-colored);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.add-task-btn::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: -100%;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+		transition: left 0.5s ease;
+	}
+
+	.add-task-btn:hover::before {
+		left: 100%;
 	}
 
 	.add-task-btn:hover:not(:disabled) {
-		transform: translateY(-2px);
-		box-shadow: var(--shadow-lg);
+		transform: translateY(-3px) scale(1.02);
+		box-shadow: var(--shadow-colored-lg);
+		background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
 	}
 
 	.add-task-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 		transform: none;
+		box-shadow: var(--shadow);
+	}
+
+	.add-task-btn:disabled::before {
+		display: none;
 	}
 
 	/* Tasks */
