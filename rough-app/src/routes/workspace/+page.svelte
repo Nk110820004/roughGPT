@@ -664,11 +664,16 @@
 		box-shadow: var(--shadow);
 	}
 
+	.disconnect-btn {
+		border: 1px solid rgba(245, 158, 11, 0.2);
+	}
+
 	.disconnect-btn:hover {
 		background: linear-gradient(135deg, var(--warning), rgba(245, 158, 11, 0.8));
 		color: white;
 		transform: translateX(4px);
 		box-shadow: var(--shadow);
+		border-color: var(--warning);
 	}
 
 	/* Main Content */
