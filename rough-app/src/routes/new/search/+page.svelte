@@ -104,7 +104,7 @@
         <div
             class="note"
             style={getFadedBgStyle(index, items.length)}
-            on:click={() => openEditor(item)}
+            onclick={() => openEditor(item)}
             role="button"
             tabindex="0"
             on:keydown={(e) => e.key === 'Enter' && openEditor(item)}
