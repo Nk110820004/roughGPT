@@ -369,16 +369,26 @@
 
 <style>
 	:root {
-		--primary: #667eea;
-		--secondary: #764ba2;
-		--accent: #ff6b6b;
+		--primary: #6366f1;
+		--primary-light: #818cf8;
+		--secondary: #ec4899;
+		--secondary-light: #f472b6;
+		--accent: #f59e0b;
+		--accent-light: #fbbf24;
+		--success: #10b981;
+		--success-light: #34d399;
+		--warning: #f59e0b;
+		--danger: #ef4444;
 		--surface: #ffffff;
-		--background: #f8fafc;
-		--text: #2d3748;
-		--text-muted: #718096;
-		--border: #e2e8f0;
+		--background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+		--background-light: #f8fafc;
+		--text: #1f2937;
+		--text-muted: #6b7280;
+		--border: #e5e7eb;
 		--shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 		--shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+		--shadow-colored: 0 10px 25px rgba(99, 102, 241, 0.2);
+		--shadow-colored-lg: 0 20px 40px rgba(99, 102, 241, 0.3);
 	}
 
 	.workspace-container {
