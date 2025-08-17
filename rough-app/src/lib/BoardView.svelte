@@ -135,19 +135,19 @@
 							</div>
 							
 							<div class="task-actions">
-								<button 
+								<button
 									class="action-btn edit"
 									onclick={() => onUpdateTodo({...todo, editing: true})}
 									title="Edit task"
 								>
-									✏️
+									<AnimatedIcon name="edit" size={14} hoverScale={1.2} />
 								</button>
-								<button 
+								<button
 									class="action-btn delete"
 									onclick={() => onDeleteTodo(todo.id)}
 									title="Delete task"
 								>
-									🗑️
+									<AnimatedIcon name="delete" size={14} hoverScale={1.2} rotation={true} />
 								</button>
 							</div>
 						</div>
