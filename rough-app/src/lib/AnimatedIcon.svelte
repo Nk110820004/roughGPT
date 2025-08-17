@@ -135,10 +135,10 @@
 	{...rest}
 >
 	{#if iconPaths[name]}
-		<img 
-			src={iconPaths[name]} 
+		<img
+			src={iconPaths[name]}
 			alt={name}
-			style="width: 100%; height: 100%; filter: brightness(0) saturate(100%) invert({color === '#ffffff' || color === 'white' ? '100%' : '0%'});"
+			style="width: 100%; height: 100%; filter: {color === '#ffffff' || color === 'white' || color === 'currentColor' ? 'brightness(0) saturate(100%) invert(100%)' : 'brightness(0) saturate(100%)'}"
 		/>
 	{:else}
 		<!-- Fallback emoji icons -->
