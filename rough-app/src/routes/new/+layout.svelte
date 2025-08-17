@@ -35,7 +35,7 @@
 	<div class="search-div">
 		<img src="/search.svg" alt="search" /><input
 			id="search-input"
-			placeholder="Search & <Enter>"
+			placeholder="✨ Discover your thoughts..."
 			oninput={handle}
 			onkeypress={handleSearch}
 		/>
