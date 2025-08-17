@@ -120,7 +120,7 @@
 	<div class="modal-wrapper">
 		<div
 			class="modal-backdrop"
-			onclick|self={closeEditor}
+			onclick={(e) => e.target === e.currentTarget && closeEditor()}
 			role="button"
 			tabindex="0"
 			onkeydown={(e) => e.key === 'Enter' && closeEditor()}
