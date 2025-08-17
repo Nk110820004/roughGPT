@@ -461,12 +461,29 @@
 	.sidebar {
 		width: 280px;
 		background: var(--surface);
+		backdrop-filter: blur(20px);
 		border-right: 1px solid var(--border);
 		display: flex;
 		flex-direction: column;
-		box-shadow: var(--shadow);
+		box-shadow: var(--shadow-colored);
 		position: relative;
 		z-index: 10;
+		border-radius: 0 20px 20px 0;
+		overflow: hidden;
+	}
+
+	.sidebar::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: linear-gradient(180deg,
+			rgba(99, 102, 241, 0.05) 0%,
+			rgba(236, 72, 153, 0.05) 50%,
+			rgba(245, 158, 11, 0.05) 100%);
+		z-index: -1;
 	}
 
 	.sidebar-header {
