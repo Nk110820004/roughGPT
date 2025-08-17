@@ -38,17 +38,23 @@
 	});
 
 	function addTodo() {
-		if (newTodo.trim()) {
+		const todoText = showRichEditor ? newTodoRichText : newTodo;
+		if (todoText && todoText.trim()) {
 			const todo = {
 				id: Date.now(),
-				text: newTodo.trim(),
+				text: todoText.trim(),
 				completed: false,
 				category: selectedTodoCategory,
 				createdAt: new Date(),
-				priority: 'medium'
+				priority: selectedTodoPriority,
+				isRichText: showRichEditor
 			};
 			todos = [...todos, todo];
-			newTodo = '';
+			if (showRichEditor) {
+				newTodoRichText = '';
+			} else {
+				newTodo = '';
+			}
 			saveTodos();
 		}
 	}
