@@ -239,7 +239,9 @@
 						bind:value={searchQuery}
 						class="search-input"
 					/>
-					<span class="search-icon">🔍</span>
+					<div class="search-icon">
+						<AnimatedIcon name="search" size={18} pulse={true} />
+					</div>
 				</div>
 				
 				<div class="view-mode-selector">
