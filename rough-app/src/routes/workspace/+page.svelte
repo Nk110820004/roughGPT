@@ -633,56 +633,6 @@
 		border-bottom: 1px solid var(--border);
 	}
 
-	.add-task-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 1.5rem;
-	}
-
-	.add-task-header h3 {
-		font-size: 1.25rem;
-		font-weight: 600;
-		color: var(--text);
-		margin: 0;
-	}
-
-	.editor-toggle {
-		display: flex;
-		gap: 0.5rem;
-	}
-
-	.toggle-editor-btn {
-		padding: 0.5rem 1rem;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		background: var(--surface);
-		color: var(--text);
-		cursor: pointer;
-		font-size: 0.875rem;
-		transition: all 0.2s ease;
-	}
-
-	.toggle-editor-btn:hover {
-		background: var(--background);
-	}
-
-	.toggle-editor-btn.active {
-		background: var(--primary);
-		color: white;
-		border-color: var(--primary);
-	}
-
-	.rich-editor-wrapper {
-		margin-bottom: 1rem;
-	}
-
-	.task-options {
-		display: flex;
-		gap: 1rem;
-		margin-bottom: 1rem;
-		flex-wrap: wrap;
-	}
 
 	.add-task-form {
 		display: flex;
