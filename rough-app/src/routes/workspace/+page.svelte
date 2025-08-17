@@ -591,23 +591,35 @@
 		border-top: 1px solid var(--border);
 	}
 
-	.logout-btn {
+	.logout-btn,
+	.disconnect-btn {
 		width: 100%;
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.75rem;
 		padding: 0.75rem 1rem;
 		border: none;
 		background: none;
-		border-radius: 8px;
+		border-radius: 12px;
 		cursor: pointer;
 		color: var(--text-muted);
-		transition: all 0.2s ease;
+		transition: all 0.3s ease;
+		margin-bottom: 0.5rem;
+		font-weight: 500;
 	}
 
 	.logout-btn:hover {
-		background: var(--background);
-		color: var(--accent);
+		background: linear-gradient(135deg, var(--danger), rgba(239, 68, 68, 0.8));
+		color: white;
+		transform: translateX(4px);
+		box-shadow: var(--shadow);
+	}
+
+	.disconnect-btn:hover {
+		background: linear-gradient(135deg, var(--warning), rgba(245, 158, 11, 0.8));
+		color: white;
+		transform: translateX(4px);
+		box-shadow: var(--shadow);
 	}
 
 	/* Main Content */
