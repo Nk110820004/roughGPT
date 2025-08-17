@@ -4,6 +4,7 @@
 	import RichTextEditor from '$lib/RichTextEditor.svelte';
 	import BoardView from '$lib/BoardView.svelte';
 	import AnimatedIcon from '$lib/AnimatedIcon.svelte';
+	import FloatingActionButton from '$lib/FloatingActionButton.svelte';
 	import anime from 'animejs/lib/anime.es.js';
 
 	let userName = $state('');
