@@ -16,12 +16,12 @@
 	let draggedTodo = $state(null);
 
 	// Group todos by status
-	$: todosByStatus = {
+	let todosByStatus = $derived({
 		todo: todos.filter(t => !t.status || t.status === 'todo'),
 		in_progress: todos.filter(t => t.status === 'in_progress'),
 		review: todos.filter(t => t.status === 'review'),
 		done: todos.filter(t => t.completed || t.status === 'done')
-	};
+	});
 
 	function handleDragStart(event, todo) {
 		draggedTodo = todo;
