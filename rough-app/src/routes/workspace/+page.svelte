@@ -19,6 +19,7 @@
 	let currentView = $state('list'); // 'list', 'board', 'calendar'
 	let showRichEditor = $state(false);
 	let newTodoRichText = $state('');
+	let showQuickAdd = $state(false);
 
 	const categories = [
 		{ id: 'all', name: 'All Tasks', icon: '📋', color: '#6366f1' },
