@@ -39,7 +39,7 @@
 					placeholder="What's your name?"
 					bind:value={userName}
 					class="name-input"
-					on:keypress={(e) => e.key === 'Enter' && startApp()}
+					onkeypress={(e) => e.key === 'Enter' && startApp()}
 				/>
 				<button class="start-button" onclick={startApp} disabled={!userName.trim()}>
 					Get Started
