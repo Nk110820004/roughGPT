@@ -716,6 +716,9 @@
 	}
 
 	.view-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		padding: 0.5rem 1rem;
 		border: none;
 		border-radius: 8px;
@@ -724,16 +727,20 @@
 		color: var(--text);
 		font-size: 0.875rem;
 		font-weight: 500;
-		transition: all 0.2s ease;
+		transition: all 0.3s ease;
 	}
 
 	.view-btn:hover {
-		background: var(--background);
+		background: var(--background-light);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 
 	.view-btn.active {
-		background: var(--primary);
+		background: linear-gradient(135deg, var(--primary), var(--primary-light));
 		color: white;
+		box-shadow: var(--shadow-colored);
+		transform: translateY(-1px);
 	}
 
 	/* Add Task */
