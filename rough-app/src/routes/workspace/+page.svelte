@@ -20,12 +20,12 @@
 	let newTodoRichText = $state('');
 
 	const categories = [
-		{ id: 'all', name: 'All Tasks', icon: '📋', color: 'var(--primary)' },
-		{ id: 'personal', name: 'Personal', icon: '🏠', color: '#ff6b6b' },
-		{ id: 'work', name: 'Work', icon: '💼', color: '#4ecdc4' },
-		{ id: 'shopping', name: 'Shopping', icon: '🛒', color: '#45b7d1' },
-		{ id: 'health', name: 'Health', icon: '🏃', color: '#96ceb4' },
-		{ id: 'learning', name: 'Learning', icon: '📚', color: '#feca57' }
+		{ id: 'all', name: 'All Tasks', icon: '📋', color: '#6366f1' },
+		{ id: 'personal', name: 'Personal', icon: '🏠', color: '#ec4899' },
+		{ id: 'work', name: 'Work', icon: '💼', color: '#8b5cf6' },
+		{ id: 'shopping', name: 'Shopping', icon: '🛒', color: '#06b6d4' },
+		{ id: 'health', name: 'Health', icon: '🏃', color: '#10b981' },
+		{ id: 'learning', name: 'Learning', icon: '📚', color: '#f59e0b' }
 	];
 
 	let selectedTodoCategory = $state('personal');
