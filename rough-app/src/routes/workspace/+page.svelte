@@ -3,6 +3,8 @@
 	import { goto } from '$app/navigation';
 	import RichTextEditor from '$lib/RichTextEditor.svelte';
 	import BoardView from '$lib/BoardView.svelte';
+	import AnimatedIcon from '$lib/AnimatedIcon.svelte';
+	import anime from 'animejs/lib/anime.es.js';
 
 	let userName = $state('');
 	let todos = $state([]);
