@@ -293,9 +293,9 @@
 							class:completed={todo.completed}
 							class:editing={editingId === todo.id}
 							draggable="true"
-							on:dragstart={(e) => handleDragStart(e, todo)}
-							on:dragover={handleDragOver}
-							on:drop={(e) => handleDrop(e, todo)}
+							ondragstart={(e) => handleDragStart(e, todo)}
+							ondragover={handleDragOver}
+							ondrop={(e) => handleDrop(e, todo)}
 							style="--category-color: {categories.find(c => c.id === todo.category)?.color}"
 						>
 							<div class="task-checkbox-container">
