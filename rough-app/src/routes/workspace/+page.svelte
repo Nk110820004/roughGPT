@@ -557,10 +557,12 @@
 	}
 
 	.category-item.active {
-		background: linear-gradient(135deg, var(--category-color), transparent);
+		background: linear-gradient(135deg, var(--category-color), rgba(255, 255, 255, 0.1));
 		background-color: var(--category-color);
 		color: white;
 		font-weight: 500;
+		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+		transform: translateX(4px) scale(1.02);
 	}
 
 	.category-icon {
