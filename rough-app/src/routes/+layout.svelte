@@ -1,159 +1,244 @@
 <script>
 	import { onMount } from 'svelte';
-	import { setContext } from 'svelte';
-	import { goto } from '$app/navigation';
-
+	
 	let { children } = $props();
+	let mounted = $state(false);
 
-	let darkModeToggleSrc = $state('/sun.svg'); // Default icon
-	/**
-	 * @type {HTMLImageElement}
-	 */
-	let plug;
-	/**
-	 * @type {HTMLImageElement}
-	 */
-	let socket;
-
-	function logout() {
-		goto('/');
-		plug.classList.remove('connected');
-		socket.classList.remove('connected');
-		localStorage.removeItem('apiKey');
-	}
-
-	function toggle() {
-		const body = window.document.body;
-		body.classList.toggle('dark-mode');
-
-		// Change icon when toggled
-		darkModeToggleSrc = body.classList.contains('dark-mode') ? '/moon.svg' : '/sun.svg';
-	}
-
-	function connectAnimation() {
-		// Ensure plug exists before modifying it
-		if (plug) {
-			plug.classList.add('connected');
-			socket.classList.add('connected');
-		}
-	}
-
-	setContext('animations', { connectAnimation });
 	onMount(() => {
-		toggle();
-		toggle();
-		document.getElementById('dark-mode-toggle')?.addEventListener('click', toggle);
-		plug.addEventListener('click', logout);
-		socket.addEventListener('click', logout);
-		if (localStorage.getItem('apiKey')) {
-			connectAnimation();
+		// Add CSS custom properties for better performance
+		const root = document.documentElement;
+		root.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+		
+		// Handle viewport height changes for mobile
+		const handleResize = () => {
+			root.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+		};
+		
+		window.addEventListener('resize', handleResize);
+		// Register service worker for better performance and offline support
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/sw.js')
+				.then((registration) => {
+					console.log('SW registered: ', registration);
+				})
+				.catch((registrationError) => {
+					console.log('SW registration failed: ', registrationError);
+				});
 		}
+
+		mounted = true;
+		
+		return () => {
+			window.removeEventListener('resize', handleResize);
+		};
 	});
 </script>
 
-<img
-	id="dark-mode-toggle"
-	class="dark-mode-toggle"
-	src={darkModeToggleSrc}
-	alt="Toggle Dark Mode"
-/>
+<svelte:head>
+	<title>TaskFlow - Beautiful Todo & Task Management</title>
+	<meta name="description" content="A beautiful, Notion-like task management application built with SvelteKit" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+	
+	<!-- Preload critical resources -->
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	
+	<!-- Optimize font loading -->
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+		rel="stylesheet"
+		media="print"
+		onload={(e) => e.target.media = 'all'}
+	/>
+	
+	<!-- Favicon -->
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
 
-<img bind:this={plug} class="plug" src="/plug.svg" alt="plug" />
-<img bind:this={socket} class="socket" src="/socket.svg" alt="socket" />
+	<!-- PWA Manifest -->
+	<link rel="manifest" href="/manifest.json" />
+	<meta name="theme-color" content="#667eea" />
+</svelte:head>
 
-{@render children()}
+{#if mounted}
+	{@render children()}
+{:else}
+	<!-- Loading state for better perceived performance -->
+	<div class="loading-screen">
+		<div class="loading-spinner"></div>
+		<p>Loading TaskFlow...</p>
+	</div>
+{/if}
 
 <style>
-	:global(body) .plug {
-		width: 52vw;
-		height: auto;
-		position: fixed;
-		left: -8%;
-		bottom: 2.95vw;
-		filter: none;
-		cursor:pointer;
-		transition:
-			filter 0.3s,
-			left 0.33s;
+	/* CSS Reset and base styles */
+	:global(*),
+	:global(*::before),
+	:global(*::after) {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
 	}
 
-	:global(body.dark-mode) .plug {
-		filter: invert(1);
-		transition:
-			filter 0.3s,
-			left 0.33s;
-	}
-
-	:global(body) :global(.plug.connected) {
-		left: 0%;
-		transition: left 0.33s;
+	:global(html) {
+		height: 100%;
+		font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+			'Helvetica Neue', Arial, sans-serif;
+		line-height: 1.6;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
 	}
 
 	:global(body) {
-		background-color: #d3b251;
-		transition: background-color 0.3s;
+		height: 100%;
+		margin: 0;
+		background: #f8fafc;
+		color: #2d3748;
+		overflow-x: hidden;
+		/* Use CSS custom property for better mobile viewport handling */
+		min-height: calc(var(--vh, 1vh) * 100);
 	}
 
-	:global(body.dark-mode) {
-		background-color: black;
-		transition: background-color 0.3s;
-	}
-
-	:global(body) .socket {
-		width: 50vw;
+	/* Performance optimizations */
+	:global(img) {
+		max-width: 100%;
 		height: auto;
-		bottom: 2.15vw;
-		position: fixed;
-		right: -10%;
-		filter: none;
-		cursor:pointer;
-		transition:
-			filter 0.3s,
-			right 0.33s;
+		/* Improve image loading performance */
+		loading: lazy;
+		decode: async;
 	}
 
-	:global(body.dark-mode) .socket {
-		filter: invert(1);
-		transition:
-			filter 0.3s,
-			right 0.33s;
+	/* Focus management for accessibility */
+	:global(:focus-visible) {
+		outline: 2px solid #667eea;
+		outline-offset: 2px;
+		border-radius: 4px;
 	}
 
-	:global(body) :global(.socket.connected) {
-		right: 0%;
-		transition: right 0.33s;
+	/* Hide focus outline for mouse users */
+	:global(:focus:not(:focus-visible)) {
+		outline: none;
 	}
 
-	.dark-mode-toggle {
-		position: fixed;
-		right: 4%;
-		top: 4.5%;
-		cursor: pointer;
-		width: 4vw;
-		height: auto;
-	}
-	/*  Highlight effect on hover */
-	.dark-mode-toggle:hover {
-		filter: brightness(1.2); /* Slight highlight effect */
-		transform: scale(1.1); /* Slight zoom effect */
-		transition: 0.2s ease-in-out; /* Smooth animation */
+	/* Improve button and interactive element performance */
+	:global(button),
+	:global(input),
+	:global(select),
+	:global(textarea) {
+		font-family: inherit;
+		border: none;
+		background: none;
+		/* Improve touch targets on mobile */
+		min-height: 44px;
 	}
 
-	/*  Make the moon icon white when dark mode is active */
-	:global(body.dark-mode) .dark-mode-toggle {
-		filter: invert(1) brightness(2);
+	/* Smooth scrolling */
+	:global(html) {
+		scroll-behavior: smooth;
 	}
 
-	/* Responsive design for smaller screens */
-	@media (max-width: 768px) {
-		:global(body) :global(.plug.connected) {
-			left: -0.1%;
-			transition: left 0.33s;
+	/* Reduce motion for users who prefer it */
+	@media (prefers-reduced-motion: reduce) {
+		:global(*),
+		:global(*::before),
+		:global(*::after) {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
 		}
-
-		:global(body) :global(.socket.connected) {
-			right: -0.1%;
-			transition: right 0.33s;
+		
+		:global(html) {
+			scroll-behavior: auto;
 		}
+	}
+
+	/* Dark mode support */
+	@media (prefers-color-scheme: dark) {
+		:global(body) {
+			background: #1a202c;
+			color: #e2e8f0;
+		}
+	}
+
+	/* Loading screen styles */
+	.loading-screen {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 100vh;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		text-align: center;
+	}
+
+	.loading-spinner {
+		width: 40px;
+		height: 40px;
+		border: 3px solid rgba(255, 255, 255, 0.3);
+		border-top: 3px solid white;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+		margin-bottom: 1rem;
+	}
+
+	.loading-screen p {
+		font-size: 1.1rem;
+		font-weight: 500;
+		opacity: 0.9;
+	}
+
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	/* Print styles */
+	@media print {
+		:global(body) {
+			background: white;
+			color: black;
+		}
+		
+		:global(.sidebar),
+		:global(.header-actions),
+		:global(.task-actions) {
+			display: none !important;
+		}
+	}
+
+	/* High contrast mode support */
+	@media (prefers-contrast: high) {
+		:global(body) {
+			background: white;
+			color: black;
+		}
+		
+		:global(button),
+		:global(input) {
+			border: 2px solid black;
+		}
+	}
+
+	/* Performance: Contain layout shifts */
+	:global(.task-item),
+	:global(.category-item),
+	:global(.feature-item) {
+		contain: layout style paint;
+	}
+
+	/* Optimize animations for 60fps */
+	:global(.task-item),
+	:global(.floating-card),
+	:global(button) {
+		will-change: transform;
+		transform: translateZ(0);
+		backface-visibility: hidden;
+	}
+
+	/* Remove will-change after animation completes to save memory */
+	:global(.task-item:not(:hover)),
+	:global(button:not(:hover)) {
+		will-change: auto;
 	}
 </style>

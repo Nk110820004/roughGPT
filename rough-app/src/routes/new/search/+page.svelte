@@ -104,10 +104,10 @@
         <div
             class="note"
             style={getFadedBgStyle(index, items.length)}
-            on:click={() => openEditor(item)}
+            onclick={() => openEditor(item)}
             role="button"
             tabindex="0"
-            on:keydown={(e) => e.key === 'Enter' && openEditor(item)}
+            onkeydown={(e) => e.key === 'Enter' && openEditor(item)}
         >
             {item}
         </div>
@@ -120,14 +120,14 @@
 	<div class="modal-wrapper">
 		<div
 			class="modal-backdrop"
-			on:click|self={closeEditor}
+			onclick={(e) => e.target === e.currentTarget && closeEditor()}
 			role="button"
 			tabindex="0"
-			on:keydown={(e) => e.key === 'Enter' && closeEditor()}
+			onkeydown={(e) => e.key === 'Enter' && closeEditor()}
 			aria-label="Close editor"
 		></div>
 		<div class="note-editor">
-			<button class="delete-btn" on:click={deleteNote}>
+			<button class="delete-btn" onclick={deleteNote}>
 				Delete
 			</button>
 

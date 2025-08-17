@@ -25,6 +25,7 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
-		"@pinecone-database/pinecone": "^5.1.1"
+		"@pinecone-database/pinecone": "^5.1.1",
+		"animejs": "^4.1.3"
 	}
 }
