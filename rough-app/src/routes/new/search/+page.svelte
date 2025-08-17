@@ -107,7 +107,7 @@
             onclick={() => openEditor(item)}
             role="button"
             tabindex="0"
-            on:keydown={(e) => e.key === 'Enter' && openEditor(item)}
+            onkeydown={(e) => e.key === 'Enter' && openEditor(item)}
         >
             {item}
         </div>
