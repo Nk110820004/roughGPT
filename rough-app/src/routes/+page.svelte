@@ -71,13 +71,26 @@
 <style>
 	.welcome-container {
 		min-height: 100vh;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: linear-gradient(135deg,
+			#6366f1 0%,
+			#8b5cf6 25%,
+			#ec4899 50%,
+			#f59e0b 75%,
+			#10b981 100%);
 		background-attachment: fixed;
+		background-size: 400% 400%;
+		animation: gradientShift 8s ease infinite;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		position: relative;
 		overflow: hidden;
+	}
+
+	@keyframes gradientShift {
+		0% { background-position: 0% 50%; }
+		50% { background-position: 100% 50%; }
+		100% { background-position: 0% 50%; }
 	}
 
 	.floating-elements {
