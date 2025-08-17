@@ -322,7 +322,14 @@
 										autofocus
 									/>
 								{:else}
-									<div class="task-text" onclick={() => startEdit(todo)}>
+									<div
+										class="task-text"
+										onclick={() => startEdit(todo)}
+										onkeydown={(e) => e.key === 'Enter' && startEdit(todo)}
+										role="button"
+										tabindex="0"
+										aria-label="Edit task"
+									>
 										{#if todo.isRichText}
 											{@html todo.text}
 										{:else}
