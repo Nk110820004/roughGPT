@@ -27,6 +27,7 @@
 	];
 
 	let selectedTodoCategory = $state('personal');
+	let selectedTodoPriority = $state('medium');
 
 	// Filtered todos based on search and category
 	$: filteredTodos = todos.filter(todo => {
