@@ -321,7 +321,11 @@
 									/>
 								{:else}
 									<div class="task-text" onclick={() => startEdit(todo)}>
-										{todo.text}
+										{#if todo.isRichText}
+											{@html todo.text}
+										{:else}
+											{todo.text}
+										{/if}
 									</div>
 								{/if}
 								
