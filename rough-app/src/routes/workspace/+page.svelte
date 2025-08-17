@@ -89,13 +89,26 @@
 
 	function saveEdit() {
 		if (editText.trim()) {
-			todos = todos.map(todo => 
+			todos = todos.map(todo =>
 				todo.id === editingId ? { ...todo, text: editText.trim() } : todo
 			);
 		}
 		editingId = null;
 		editText = '';
 		saveTodos();
+	}
+
+	function quickAddTask() {
+		showQuickAdd = true;
+		// Scroll to add task section
+		document.querySelector('.add-task-container')?.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center'
+		});
+		// Focus on input
+		setTimeout(() => {
+			document.querySelector('.new-task-input')?.focus();
+		}, 500);
 	}
 
 	function cancelEdit() {
