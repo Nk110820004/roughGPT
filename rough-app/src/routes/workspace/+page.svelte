@@ -592,6 +592,36 @@
 		border-color: var(--primary);
 	}
 
+	.view-mode-selector {
+		display: flex;
+		gap: 0.5rem;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		padding: 0.25rem;
+		background: var(--surface);
+	}
+
+	.view-btn {
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 8px;
+		background: none;
+		cursor: pointer;
+		color: var(--text);
+		font-size: 0.875rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+	}
+
+	.view-btn:hover {
+		background: var(--background);
+	}
+
+	.view-btn.active {
+		background: var(--primary);
+		color: white;
+	}
+
 	/* Add Task */
 	.add-task-container {
 		padding: 2rem;
