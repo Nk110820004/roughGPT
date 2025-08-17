@@ -1,0 +1,807 @@
+<script>
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+
+	let userName = $state('');
+	let todos = $state([]);
+	let newTodo = $state('');
+	let searchQuery = $state('');
+	let selectedCategory = $state('all');
+	let showCompleted = $state(true);
+	let editingId = $state(null);
+	let editText = $state('');
+	let draggedItem = $state(null);
+
+	const categories = [
+		{ id: 'all', name: 'All Tasks', icon: '📋', color: 'var(--primary)' },
+		{ id: 'personal', name: 'Personal', icon: '🏠', color: '#ff6b6b' },
+		{ id: 'work', name: 'Work', icon: '💼', color: '#4ecdc4' },
+		{ id: 'shopping', name: 'Shopping', icon: '🛒', color: '#45b7d1' },
+		{ id: 'health', name: 'Health', icon: '🏃', color: '#96ceb4' },
+		{ id: 'learning', name: 'Learning', icon: '📚', color: '#feca57' }
+	];
+
+	let selectedTodoCategory = $state('personal');
+
+	// Filtered todos based on search and category
+	$: filteredTodos = todos.filter(todo => {
+		const matchesSearch = todo.text.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchesCategory = selectedCategory === 'all' || todo.category === selectedCategory;
+		const matchesCompletion = showCompleted || !todo.completed;
+		return matchesSearch && matchesCategory && matchesCompletion;
+	});
+
+	function addTodo() {
+		if (newTodo.trim()) {
+			const todo = {
+				id: Date.now(),
+				text: newTodo.trim(),
+				completed: false,
+				category: selectedTodoCategory,
+				createdAt: new Date(),
+				priority: 'medium'
+			};
+			todos = [...todos, todo];
+			newTodo = '';
+			saveTodos();
+		}
+	}
+
+	function toggleTodo(id) {
+		todos = todos.map(todo => 
+			todo.id === id ? { ...todo, completed: !todo.completed } : todo
+		);
+		saveTodos();
+	}
+
+	function deleteTodo(id) {
+		todos = todos.filter(todo => todo.id !== id);
+		saveTodos();
+	}
+
+	function startEdit(todo) {
+		editingId = todo.id;
+		editText = todo.text;
+	}
+
+	function saveEdit() {
+		if (editText.trim()) {
+			todos = todos.map(todo => 
+				todo.id === editingId ? { ...todo, text: editText.trim() } : todo
+			);
+		}
+		editingId = null;
+		editText = '';
+		saveTodos();
+	}
+
+	function cancelEdit() {
+		editingId = null;
+		editText = '';
+	}
+
+	function saveTodos() {
+		localStorage.setItem('todos', JSON.stringify(todos));
+	}
+
+	function loadTodos() {
+		const saved = localStorage.getItem('todos');
+		if (saved) {
+			todos = JSON.parse(saved);
+		}
+	}
+
+	function logout() {
+		localStorage.removeItem('userName');
+		localStorage.removeItem('todos');
+		goto('/');
+	}
+
+	// Drag and drop functions
+	function handleDragStart(event, todo) {
+		draggedItem = todo;
+		event.dataTransfer.effectAllowed = 'move';
+	}
+
+	function handleDragOver(event) {
+		event.preventDefault();
+		event.dataTransfer.dropEffect = 'move';
+	}
+
+	function handleDrop(event, targetTodo) {
+		event.preventDefault();
+		if (draggedItem && draggedItem.id !== targetTodo.id) {
+			const draggedIndex = todos.findIndex(t => t.id === draggedItem.id);
+			const targetIndex = todos.findIndex(t => t.id === targetTodo.id);
+			
+			const newTodos = [...todos];
+			newTodos.splice(draggedIndex, 1);
+			newTodos.splice(targetIndex, 0, draggedItem);
+			
+			todos = newTodos;
+			saveTodos();
+		}
+		draggedItem = null;
+	}
+
+	onMount(() => {
+		const savedName = localStorage.getItem('userName');
+		if (!savedName) {
+			goto('/');
+			return;
+		}
+		userName = savedName;
+		loadTodos();
+	});
+</script>
+
+<div class="workspace-container">
+	<!-- Sidebar -->
+	<aside class="sidebar">
+		<div class="sidebar-header">
+			<h2 class="app-title">TaskFlow</h2>
+			<div class="user-info">
+				<div class="user-avatar">
+					{userName.charAt(0).toUpperCase()}
+				</div>
+				<span class="user-name">{userName}</span>
+			</div>
+		</div>
+
+		<nav class="categories">
+			<h3>Categories</h3>
+			{#each categories as category}
+				<button
+					class="category-item"
+					class:active={selectedCategory === category.id}
+					onclick={() => selectedCategory = category.id}
+					style="--category-color: {category.color}"
+				>
+					<span class="category-icon">{category.icon}</span>
+					<span class="category-name">{category.name}</span>
+					<span class="task-count">
+						{todos.filter(t => category.id === 'all' || t.category === category.id).length}
+					</span>
+				</button>
+			{/each}
+		</nav>
+
+		<div class="sidebar-footer">
+			<button class="logout-btn" onclick={logout}>
+				<span>🚪</span> Sign Out
+			</button>
+		</div>
+	</aside>
+
+	<!-- Main Content -->
+	<main class="main-content">
+		<header class="content-header">
+			<div class="header-left">
+				<h1 class="page-title">
+					{categories.find(c => c.id === selectedCategory)?.name || 'All Tasks'}
+				</h1>
+				<div class="task-stats">
+					{filteredTodos.filter(t => !t.completed).length} active, 
+					{filteredTodos.filter(t => t.completed).length} completed
+				</div>
+			</div>
+			
+			<div class="header-actions">
+				<div class="search-container">
+					<input
+						type="text"
+						placeholder="Search tasks..."
+						bind:value={searchQuery}
+						class="search-input"
+					/>
+					<span class="search-icon">🔍</span>
+				</div>
+				
+				<button 
+					class="toggle-completed"
+					class:active={showCompleted}
+					onclick={() => showCompleted = !showCompleted}
+				>
+					{showCompleted ? '👁️' : '👁️‍🗨️'} Show Completed
+				</button>
+			</div>
+		</header>
+
+		<!-- Add New Task -->
+		<div class="add-task-container">
+			<div class="add-task-form">
+				<input
+					type="text"
+					placeholder="Add a new task..."
+					bind:value={newTodo}
+					class="new-task-input"
+					on:keypress={(e) => e.key === 'Enter' && addTodo()}
+				/>
+				
+				<select bind:value={selectedTodoCategory} class="category-select">
+					{#each categories.slice(1) as category}
+						<option value={category.id}>{category.icon} {category.name}</option>
+					{/each}
+				</select>
+				
+				<button onclick={addTodo} class="add-task-btn" disabled={!newTodo.trim()}>
+					Add Task
+				</button>
+			</div>
+		</div>
+
+		<!-- Tasks List -->
+		<div class="tasks-container">
+			{#if filteredTodos.length === 0}
+				<div class="empty-state">
+					<div class="empty-icon">📝</div>
+					<h3>No tasks found</h3>
+					<p>
+						{searchQuery ? 'Try adjusting your search terms' : 'Create your first task to get started!'}
+					</p>
+				</div>
+			{:else}
+				<div class="tasks-list">
+					{#each filteredTodos as todo (todo.id)}
+						<div
+							class="task-item"
+							class:completed={todo.completed}
+							class:editing={editingId === todo.id}
+							draggable="true"
+							on:dragstart={(e) => handleDragStart(e, todo)}
+							on:dragover={handleDragOver}
+							on:drop={(e) => handleDrop(e, todo)}
+							style="--category-color: {categories.find(c => c.id === todo.category)?.color}"
+						>
+							<div class="task-checkbox-container">
+								<button
+									class="task-checkbox"
+									onclick={() => toggleTodo(todo.id)}
+									class:checked={todo.completed}
+								>
+									{#if todo.completed}✓{/if}
+								</button>
+							</div>
+
+							<div class="task-content">
+								{#if editingId === todo.id}
+									<input
+										type="text"
+										bind:value={editText}
+										class="edit-input"
+										on:keypress={(e) => e.key === 'Enter' && saveEdit()}
+										on:keydown={(e) => e.key === 'Escape' && cancelEdit()}
+										on:blur={saveEdit}
+										autofocus
+									/>
+								{:else}
+									<div class="task-text" onclick={() => startEdit(todo)}>
+										{todo.text}
+									</div>
+								{/if}
+								
+								<div class="task-meta">
+									<span class="task-category">
+										{categories.find(c => c.id === todo.category)?.icon}
+										{categories.find(c => c.id === todo.category)?.name}
+									</span>
+									<span class="task-date">
+										{new Date(todo.createdAt).toLocaleDateString()}
+									</span>
+								</div>
+							</div>
+
+							<div class="task-actions">
+								{#if editingId === todo.id}
+									<button onclick={saveEdit} class="action-btn save">✓</button>
+									<button onclick={cancelEdit} class="action-btn cancel">✕</button>
+								{:else}
+									<button onclick={() => startEdit(todo)} class="action-btn edit">✏️</button>
+									<button onclick={() => deleteTodo(todo.id)} class="action-btn delete">🗑️</button>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</main>
+</div>
+
+<style>
+	:root {
+		--primary: #667eea;
+		--secondary: #764ba2;
+		--accent: #ff6b6b;
+		--surface: #ffffff;
+		--background: #f8fafc;
+		--text: #2d3748;
+		--text-muted: #718096;
+		--border: #e2e8f0;
+		--shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+		--shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+	}
+
+	.workspace-container {
+		display: flex;
+		min-height: 100vh;
+		background: var(--background);
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	}
+
+	/* Sidebar */
+	.sidebar {
+		width: 280px;
+		background: var(--surface);
+		border-right: 1px solid var(--border);
+		display: flex;
+		flex-direction: column;
+		box-shadow: var(--shadow);
+		position: relative;
+		z-index: 10;
+	}
+
+	.sidebar-header {
+		padding: 2rem 1.5rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.app-title {
+		font-size: 1.5rem;
+		font-weight: 800;
+		color: var(--primary);
+		margin-bottom: 1rem;
+	}
+
+	.user-info {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.user-avatar {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, var(--primary), var(--secondary));
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		font-weight: 600;
+		font-size: 1.1rem;
+	}
+
+	.user-name {
+		font-weight: 500;
+		color: var(--text);
+	}
+
+	.categories {
+		flex: 1;
+		padding: 1.5rem;
+	}
+
+	.categories h3 {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--text-muted);
+		margin-bottom: 1rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.category-item {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		border: none;
+		background: none;
+		border-radius: 12px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		margin-bottom: 0.25rem;
+		color: var(--text);
+	}
+
+	.category-item:hover {
+		background: var(--background);
+		transform: translateX(4px);
+	}
+
+	.category-item.active {
+		background: linear-gradient(135deg, var(--category-color), transparent);
+		background-color: var(--category-color);
+		color: white;
+		font-weight: 500;
+	}
+
+	.category-icon {
+		font-size: 1.2rem;
+	}
+
+	.category-name {
+		flex: 1;
+	}
+
+	.task-count {
+		background: rgba(255, 255, 255, 0.2);
+		padding: 0.25rem 0.5rem;
+		border-radius: 12px;
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.category-item:not(.active) .task-count {
+		background: var(--border);
+		color: var(--text-muted);
+	}
+
+	.sidebar-footer {
+		padding: 1.5rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.logout-btn {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		border: none;
+		background: none;
+		border-radius: 8px;
+		cursor: pointer;
+		color: var(--text-muted);
+		transition: all 0.2s ease;
+	}
+
+	.logout-btn:hover {
+		background: var(--background);
+		color: var(--accent);
+	}
+
+	/* Main Content */
+	.main-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.content-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		padding: 2rem;
+		background: var(--surface);
+		border-bottom: 1px solid var(--border);
+		gap: 2rem;
+		flex-wrap: wrap;
+	}
+
+	.page-title {
+		font-size: 2rem;
+		font-weight: 700;
+		color: var(--text);
+		margin-bottom: 0.5rem;
+	}
+
+	.task-stats {
+		color: var(--text-muted);
+		font-size: 0.875rem;
+	}
+
+	.header-actions {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.search-container {
+		position: relative;
+	}
+
+	.search-input {
+		padding: 0.75rem 1rem 0.75rem 2.5rem;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		background: var(--surface);
+		font-size: 0.875rem;
+		outline: none;
+		transition: all 0.2s ease;
+		width: 240px;
+	}
+
+	.search-input:focus {
+		border-color: var(--primary);
+		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	}
+
+	.search-icon {
+		position: absolute;
+		left: 0.75rem;
+		top: 50%;
+		transform: translateY(-50%);
+		color: var(--text-muted);
+	}
+
+	.toggle-completed {
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		background: var(--surface);
+		cursor: pointer;
+		transition: all 0.2s ease;
+		color: var(--text);
+		font-size: 0.875rem;
+	}
+
+	.toggle-completed:hover,
+	.toggle-completed.active {
+		background: var(--primary);
+		color: white;
+		border-color: var(--primary);
+	}
+
+	/* Add Task */
+	.add-task-container {
+		padding: 2rem;
+		background: var(--surface);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.add-task-form {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.new-task-input {
+		flex: 1;
+		min-width: 300px;
+		padding: 1rem 1.5rem;
+		border: 2px solid var(--border);
+		border-radius: 16px;
+		background: var(--background);
+		font-size: 1rem;
+		outline: none;
+		transition: all 0.2s ease;
+	}
+
+	.new-task-input:focus {
+		border-color: var(--primary);
+		background: var(--surface);
+		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	}
+
+	.category-select {
+		padding: 1rem;
+		border: 2px solid var(--border);
+		border-radius: 12px;
+		background: var(--surface);
+		outline: none;
+		cursor: pointer;
+	}
+
+	.add-task-btn {
+		padding: 1rem 2rem;
+		background: linear-gradient(135deg, var(--primary), var(--secondary));
+		color: white;
+		border: none;
+		border-radius: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		box-shadow: var(--shadow);
+	}
+
+	.add-task-btn:hover:not(:disabled) {
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-lg);
+	}
+
+	.add-task-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	/* Tasks */
+	.tasks-container {
+		flex: 1;
+		padding: 2rem;
+		overflow-y: auto;
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: 4rem 2rem;
+		color: var(--text-muted);
+	}
+
+	.empty-icon {
+		font-size: 4rem;
+		margin-bottom: 1rem;
+	}
+
+	.tasks-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.task-item {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		padding: 1.5rem;
+		background: var(--surface);
+		border-radius: 16px;
+		border-left: 4px solid var(--category-color);
+		box-shadow: var(--shadow);
+		transition: all 0.3s ease;
+		cursor: grab;
+	}
+
+	.task-item:hover {
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-lg);
+	}
+
+	.task-item.completed {
+		opacity: 0.7;
+		background: var(--background);
+	}
+
+	.task-item.editing {
+		background: linear-gradient(135deg, var(--primary), transparent);
+		background-color: rgba(102, 126, 234, 0.05);
+	}
+
+	.task-checkbox {
+		width: 24px;
+		height: 24px;
+		border: 2px solid var(--border);
+		border-radius: 6px;
+		background: var(--surface);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+		color: white;
+		font-weight: 600;
+	}
+
+	.task-checkbox.checked {
+		background: var(--primary);
+		border-color: var(--primary);
+	}
+
+	.task-content {
+		flex: 1;
+	}
+
+	.task-text {
+		font-size: 1rem;
+		color: var(--text);
+		margin-bottom: 0.5rem;
+		cursor: text;
+		line-height: 1.5;
+	}
+
+	.task-item.completed .task-text {
+		text-decoration: line-through;
+		color: var(--text-muted);
+	}
+
+	.edit-input {
+		width: 100%;
+		padding: 0.5rem;
+		border: 2px solid var(--primary);
+		border-radius: 8px;
+		font-size: 1rem;
+		outline: none;
+		background: var(--surface);
+	}
+
+	.task-meta {
+		display: flex;
+		gap: 1rem;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.task-category {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.task-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.action-btn {
+		width: 32px;
+		height: 32px;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+		font-size: 0.875rem;
+	}
+
+	.action-btn.edit {
+		background: rgba(254, 202, 87, 0.1);
+		color: #f39c12;
+	}
+
+	.action-btn.delete {
+		background: rgba(255, 107, 107, 0.1);
+		color: #e74c3c;
+	}
+
+	.action-btn.save {
+		background: rgba(76, 175, 80, 0.1);
+		color: #27ae60;
+	}
+
+	.action-btn.cancel {
+		background: rgba(158, 158, 158, 0.1);
+		color: #7f8c8d;
+	}
+
+	.action-btn:hover {
+		transform: scale(1.1);
+		opacity: 0.8;
+	}
+
+	/* Responsive */
+	@media (max-width: 1024px) {
+		.sidebar {
+			width: 240px;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.workspace-container {
+			flex-direction: column;
+		}
+		
+		.sidebar {
+			width: 100%;
+			height: auto;
+		}
+		
+		.content-header {
+			flex-direction: column;
+			align-items: stretch;
+		}
+		
+		.header-actions {
+			justify-content: stretch;
+		}
+		
+		.search-input {
+			width: 100%;
+		}
+		
+		.add-task-form {
+			flex-direction: column;
+		}
+		
+		.new-task-input {
+			min-width: auto;
+		}
+	}
+</style>
