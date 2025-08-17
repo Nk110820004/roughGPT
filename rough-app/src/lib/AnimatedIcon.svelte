@@ -185,9 +185,16 @@
 
 	.animated-icon img {
 		transition: filter 0.2s ease;
+		opacity: 1;
+		display: block;
 	}
 
 	.animated-icon:hover img {
-		filter: brightness(0) saturate(100%) invert(27%) sepia(90%) saturate(3000%) hue-rotate(240deg) brightness(110%) contrast(110%);
+		filter: brightness(0) saturate(100%) invert(27%) sepia(90%) saturate(3000%) hue-rotate(240deg) brightness(110%) contrast(110%) !important;
+	}
+
+	/* Ensure disconnect icon is always visible */
+	.animated-icon img[alt="disconnect"] {
+		filter: brightness(0) saturate(100%) invert(60%) sepia(69%) saturate(5000%) hue-rotate(21deg) brightness(95%) contrast(101%) !important;
 	}
 </style>
