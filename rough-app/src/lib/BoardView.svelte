@@ -90,7 +90,7 @@
 						class="board-task"
 						class:completed={todo.completed}
 						draggable="true"
-						on:dragstart={(e) => handleDragStart(e, todo)}
+						ondragstart={(e) => handleDragStart(e, todo)}
 						style="--category-color: {categoryInfo.color}"
 						role="button"
 						tabindex="0"
