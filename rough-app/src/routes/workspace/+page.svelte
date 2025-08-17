@@ -297,6 +297,8 @@
 							ondragover={handleDragOver}
 							ondrop={(e) => handleDrop(e, todo)}
 							style="--category-color: {categories.find(c => c.id === todo.category)?.color}"
+							role="listitem"
+							aria-label="Task: {todo.text}"
 						>
 							<div class="task-checkbox-container">
 								<button
