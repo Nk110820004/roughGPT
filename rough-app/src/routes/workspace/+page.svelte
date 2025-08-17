@@ -249,7 +249,8 @@
 						onclick={() => currentView = 'list'}
 						title="List View"
 					>
-						📋 List
+						<AnimatedIcon name="list" size={16} bounce={true} />
+						<span>List</span>
 					</button>
 					<button
 						class="view-btn"
@@ -257,7 +258,8 @@
 						onclick={() => currentView = 'board'}
 						title="Board View"
 					>
-						📊 Board
+						<AnimatedIcon name="board" size={16} bounce={true} />
+						<span>Board</span>
 					</button>
 				</div>
 
