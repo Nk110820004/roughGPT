@@ -326,7 +326,7 @@
 			<div class="add-task-form">
 				<input
 					type="text"
-					placeholder="Add a new task..."
+					placeholder="✨ What amazing thing will you accomplish today?"
 					bind:value={newTodo}
 					class="new-task-input"
 					onkeypress={(e) => e.key === 'Enter' && addTodo()}
