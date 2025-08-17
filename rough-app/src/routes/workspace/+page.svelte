@@ -705,13 +705,20 @@
 		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 	}
 
-	.category-select {
+	.category-select,
+	.priority-select {
 		padding: 1rem;
 		border: 2px solid var(--border);
 		border-radius: 12px;
 		background: var(--surface);
 		outline: none;
 		cursor: pointer;
+		flex: 1;
+		min-width: 150px;
+	}
+
+	.priority-select {
+		color: var(--text);
 	}
 
 	.add-task-btn {
