@@ -36,8 +36,8 @@
 		<img src="/search.svg" alt="search" /><input
 			id="search-input"
 			placeholder="Search & <Enter>"
-			oninput={handle}
-			onkeypress={handleSearch}
+			on:input={handle}
+			on:keypress={handleSearch}
 		/>
 	</div>
 	{@render children()}
