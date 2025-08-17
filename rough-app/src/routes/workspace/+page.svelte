@@ -319,7 +319,6 @@
 										onkeypress={(e) => e.key === 'Enter' && saveEdit()}
 										onkeydown={(e) => e.key === 'Escape' && cancelEdit()}
 										onblur={saveEdit}
-										autofocus
 									/>
 								{:else}
 									<div
