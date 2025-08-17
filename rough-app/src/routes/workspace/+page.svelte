@@ -71,6 +71,13 @@
 		saveTodos();
 	}
 
+	function updateTodo(updatedTodo) {
+		todos = todos.map(todo =>
+			todo.id === updatedTodo.id ? updatedTodo : todo
+		);
+		saveTodos();
+	}
+
 	function startEdit(todo) {
 		editingId = todo.id;
 		editText = todo.text;
