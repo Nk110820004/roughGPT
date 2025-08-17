@@ -94,7 +94,7 @@
 						style="--category-color: {categoryInfo.color}"
 						role="button"
 						tabindex="0"
-						on:keydown={(e) => {
+						onkeydown={(e) => {
 							if (e.key === 'Delete') {
 								onDeleteTodo(todo.id);
 							}
