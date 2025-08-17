@@ -127,7 +127,7 @@
 			aria-label="Close editor"
 		></div>
 		<div class="note-editor">
-			<button class="delete-btn" on:click={deleteNote}>
+			<button class="delete-btn" onclick={deleteNote}>
 				Delete
 			</button>
 
