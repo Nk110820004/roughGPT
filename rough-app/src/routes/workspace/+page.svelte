@@ -202,7 +202,26 @@
 					<span class="search-icon">🔍</span>
 				</div>
 				
-				<button 
+				<div class="view-mode-selector">
+					<button
+						class="view-btn"
+						class:active={currentView === 'list'}
+						onclick={() => currentView = 'list'}
+						title="List View"
+					>
+						📋 List
+					</button>
+					<button
+						class="view-btn"
+						class:active={currentView === 'board'}
+						onclick={() => currentView = 'board'}
+						title="Board View"
+					>
+						📊 Board
+					</button>
+				</div>
+
+				<button
 					class="toggle-completed"
 					class:active={showCompleted}
 					onclick={() => showCompleted = !showCompleted}
