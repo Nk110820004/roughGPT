@@ -281,7 +281,7 @@
 				<div class="search-container">
 					<input
 						type="text"
-						placeholder="Search tasks..."
+						placeholder="🔍 Find your perfect task..."
 						bind:value={searchQuery}
 						class="search-input"
 					/>
