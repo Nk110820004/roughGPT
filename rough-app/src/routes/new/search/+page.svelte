@@ -123,7 +123,7 @@
 			onclick|self={closeEditor}
 			role="button"
 			tabindex="0"
-			on:keydown={(e) => e.key === 'Enter' && closeEditor()}
+			onkeydown={(e) => e.key === 'Enter' && closeEditor()}
 			aria-label="Close editor"
 		></div>
 		<div class="note-editor">
