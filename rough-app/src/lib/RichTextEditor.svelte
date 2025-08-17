@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 
-	let { value = '', placeholder = 'Start typing...', onUpdate = () => {} } = $props();
+	let { value = '', placeholder = '🎨 Create something beautiful...', onUpdate = () => {} } = $props();
 	
 	let editor;
 	let isFormatting = $state(false);
