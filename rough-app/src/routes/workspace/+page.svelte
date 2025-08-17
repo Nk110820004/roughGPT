@@ -13,6 +13,9 @@
 	let editingId = $state(null);
 	let editText = $state('');
 	let draggedItem = $state(null);
+	let currentView = $state('list'); // 'list', 'board', 'calendar'
+	let showRichEditor = $state(false);
+	let newTodoRichText = $state('');
 
 	const categories = [
 		{ id: 'all', name: 'All Tasks', icon: '📋', color: 'var(--primary)' },
