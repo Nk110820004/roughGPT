@@ -45,7 +45,10 @@
 
 	onMount(() => {
 		const savedName = localStorage.getItem('userName');
-		if (savedName) {
+		const pineconeConnected = localStorage.getItem('pineconeConnected');
+		const apiKey = localStorage.getItem('pineconeApiKey');
+
+		if (savedName && pineconeConnected && apiKey) {
 			goto('/workspace');
 		}
 	});
