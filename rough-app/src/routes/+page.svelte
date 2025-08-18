@@ -164,6 +164,9 @@
 		text-align: center;
 		max-width: 600px;
 		padding: 2rem;
+		margin: 0 auto;
+		width: 100%;
+		box-sizing: border-box;
 	}
 
 	.title {
