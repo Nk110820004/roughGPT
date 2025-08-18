@@ -49,24 +49,27 @@
 			<div class="features-preview">
 				<div class="feature-item">
 					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-							<path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+							<path d="M15 5l4 4"/>
 						</svg>
 					</div>
 					<span>Rich Text Editing</span>
 				</div>
 				<div class="feature-item">
 					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-							<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+							<polyline points="9,22 9,12 15,12 15,22"/>
+							<rect x="7" y="14" width="2" height="2"/>
+							<rect x="15" y="14" width="2" height="2"/>
 						</svg>
 					</div>
 					<span>Organize & Categorize</span>
 				</div>
 				<div class="feature-item">
 					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<circle cx="11" cy="11" r="8"/>
 							<path d="m21 21-4.35-4.35"/>
 						</svg>
@@ -75,9 +78,10 @@
 				</div>
 				<div class="feature-item">
 					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-							<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-							<line x1="12" y1="18" x2="12.01" y2="18"/>
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+							<line x1="8" y1="21" x2="16" y2="21"/>
+							<line x1="12" y1="17" x2="12" y2="21"/>
 						</svg>
 					</div>
 					<span>Responsive Design</span>
