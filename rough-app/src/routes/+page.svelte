@@ -69,11 +69,33 @@
 					placeholder="What's your name?"
 					bind:value={userName}
 					class="name-input"
+					onkeypress={(e) => e.key === 'Enter' && document.querySelector('.api-input').focus()}
+				/>
+				<input
+					type="password"
+					placeholder="Enter your Pinecone.io API key (e.g., pcsk_...)"
+					bind:value={apiKey}
+					class="api-input"
 					onkeypress={(e) => e.key === 'Enter' && startApp()}
 				/>
-				<button class="start-button" onclick={startApp} disabled={!userName.trim()}>
-					Get Started
+				{#if errorMessage}
+					<div class="error-message">{errorMessage}</div>
+				{/if}
+				<button class="start-button" onclick={startApp} disabled={!userName.trim() || !apiKey.trim() || isConnecting}>
+					{#if isConnecting}
+						<span class="loading-spinner"></span>
+						Connecting to Pinecone...
+					{:else}
+						Connect & Get Started
+					{/if}
 				</button>
+				<div class="api-info">
+					<p><strong>🔗 Get your Pinecone API key:</strong></p>
+					<p>1. Go to <a href="https://pinecone.io" target="_blank" rel="noopener">pinecone.io</a></p>
+					<p>2. Sign in to your account</p>
+					<p>3. Navigate to API Keys section</p>
+					<p>4. Copy your API key (starts with "pcsk_")</p>
+				</div>
 			</div>
 			
 			<div class="features-preview">
