@@ -164,7 +164,13 @@
 
 				{#if (todosByStatus[column.id]?.length || 0) === 0}
 					<div class="empty-column">
-						<div class="empty-icon">📋</div>
+						<div class="empty-icon">
+							<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M9 12l2 2 4-4"/>
+								<path d="M21 12c.552 0 1-.449 1-1V5c0-.551-.448-1-1-1H3c-.552 0-1 .449-1 1v6c0 .551.448 1 1 1h18z"/>
+								<path d="M3 12v7c0 .551.448 1 1 1h16c.552 0 1-.449 1-1v-7"/>
+							</svg>
+						</div>
 						<p>No tasks in {column.title.toLowerCase()}</p>
 					</div>
 				{/if}
