@@ -813,6 +813,8 @@
 		padding: 2rem;
 		background: var(--surface);
 		border-bottom: 1px solid var(--border);
+		position: relative;
+		z-index: 2;
 	}
 
 
