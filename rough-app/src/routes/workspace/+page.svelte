@@ -488,7 +488,6 @@
 		background: var(--background);
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 		position: relative;
-		overflow: hidden;
 	}
 
 	.workspace-container::before {
