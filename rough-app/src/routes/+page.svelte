@@ -122,7 +122,8 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-		z-index: 1;
+		z-index: -1;
+		pointer-events: none;
 	}
 
 	.floating-card {
@@ -164,7 +165,7 @@
 
 	.hero-section {
 		position: relative;
-		z-index: 2;
+		z-index: 10;
 		text-align: center;
 		max-width: 600px;
 		padding: 2rem;
@@ -210,6 +211,10 @@
 		margin-bottom: 1rem;
 		outline: none;
 		transition: all 0.3s ease;
+		position: relative;
+		z-index: 20;
+		pointer-events: auto;
+		cursor: text;
 	}
 
 	.name-input:focus {
