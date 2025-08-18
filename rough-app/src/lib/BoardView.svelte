@@ -306,7 +306,15 @@
 	}
 
 	.category-icon {
-		font-size: 1rem;
+		font-size: 0.65rem;
+		font-weight: 700;
+		background: var(--category-color);
+		color: white;
+		padding: 0.2rem 0.35rem;
+		border-radius: 4px;
+		letter-spacing: 0.5px;
+		min-width: 24px;
+		text-align: center;
 	}
 
 	.priority-indicator {
