@@ -177,6 +177,12 @@
 				{#if errorMessage}
 					<div class="error-message">{errorMessage}</div>
 				{/if}
+				{#if isConnecting}
+					<div class="info-message">
+						<span class="loading-spinner"></span>
+						Testing API connection and validating user...
+					</div>
+				{/if}
 				<button class="start-button" onclick={startApp} disabled={!userName.trim() || !apiKey.trim() || isConnecting}>
 					{#if isConnecting}
 						<span class="loading-spinner"></span>
