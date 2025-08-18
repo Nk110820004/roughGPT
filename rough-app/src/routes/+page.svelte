@@ -4,13 +4,43 @@
 
 	let { data } = $props();
 	let userName = $state('');
+	let apiKey = $state('');
 	let showWelcome = $state(true);
+	let isConnecting = $state(false);
+	let errorMessage = $state('');
 
 	function startApp() {
-		if (userName.trim()) {
-			localStorage.setItem('userName', userName);
-			goto('/workspace');
+		if (userName.trim() && apiKey.trim()) {
+			isConnecting = true;
+			errorMessage = '';
+
+			// Test the API key first
+			testPineconeConnection(apiKey.trim())
+				.then(() => {
+					localStorage.setItem('userName', userName);
+					localStorage.setItem('pineconeApiKey', apiKey.trim());
+					localStorage.setItem('pineconeConnected', 'true');
+					goto('/workspace');
+				})
+				.catch((error) => {
+					errorMessage = 'Invalid Pinecone API key. Please check and try again.';
+					isConnecting = false;
+				});
 		}
+	}
+
+	async function testPineconeConnection(key) {
+		const response = await fetch('/create-index', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ apiKey: key })
+		});
+
+		if (!response.ok) {
+			throw new Error('API key validation failed');
+		}
+
+		return response.json();
 	}
 
 	onMount(() => {
