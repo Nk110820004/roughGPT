@@ -365,14 +365,18 @@
 		transform: translateY(-2px);
 	}
 
+	.api-input-container {
+		position: relative;
+		margin-bottom: 1rem;
+	}
+
 	.api-input {
 		width: 100%;
-		padding: 1rem 1.5rem;
+		padding: 1rem 3rem 1rem 1.5rem;
 		border: none;
 		border-radius: 15px;
 		font-size: 1rem;
 		background: rgba(255, 255, 255, 0.9);
-		margin-bottom: 1rem;
 		outline: none;
 		transition: all 0.3s ease;
 		position: relative;
@@ -380,6 +384,7 @@
 		pointer-events: auto;
 		cursor: text;
 		font-family: monospace;
+		box-sizing: border-box;
 	}
 
 	.api-input:focus {
