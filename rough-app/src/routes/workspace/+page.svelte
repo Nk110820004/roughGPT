@@ -620,7 +620,14 @@
 	}
 
 	.category-icon {
-		font-size: 1.2rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		background: rgba(255, 255, 255, 0.2);
+		padding: 0.25rem 0.4rem;
+		border-radius: 6px;
+		letter-spacing: 0.5px;
+		min-width: 32px;
+		text-align: center;
 	}
 
 	.category-name {
