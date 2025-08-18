@@ -281,7 +281,13 @@
 				<div class="user-avatar">
 					{userName.charAt(0).toUpperCase()}
 				</div>
-				<span class="user-name">{userName}</span>
+				<div class="user-details">
+					<span class="user-name">{userName}</span>
+					<div class="connection-status">
+						<div class="status-indicator"></div>
+						<span>Pinecone Connected</span>
+					</div>
+				</div>
 			</div>
 		</div>
 
