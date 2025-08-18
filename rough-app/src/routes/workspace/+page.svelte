@@ -909,8 +909,14 @@
 	}
 
 	.empty-icon {
-		font-size: 4rem;
 		margin-bottom: 1rem;
+		color: var(--text-muted);
+		opacity: 0.6;
+	}
+
+	.empty-icon svg {
+		width: 48px;
+		height: 48px;
 	}
 
 	.tasks-list {
