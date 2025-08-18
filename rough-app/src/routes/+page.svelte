@@ -393,6 +393,29 @@
 		transform: translateY(-2px);
 	}
 
+	.toggle-api-visibility {
+		position: absolute;
+		right: 1rem;
+		top: 50%;
+		transform: translateY(-50%);
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: #6b7280;
+		z-index: 25;
+		padding: 0.25rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 4px;
+		transition: all 0.2s ease;
+	}
+
+	.toggle-api-visibility:hover {
+		background: rgba(0, 0, 0, 0.05);
+		color: #374151;
+	}
+
 	.error-message {
 		background: rgba(239, 68, 68, 0.1);
 		color: #dc2626;
