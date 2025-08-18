@@ -316,7 +316,7 @@
 					class:active={showCompleted}
 					onclick={() => showCompleted = !showCompleted}
 				>
-					{showCompleted ? '👁️' : '👁️‍🗨️'} Show Completed
+					{showCompleted ? 'Hide' : 'Show'} Completed
 				</button>
 			</div>
 		</header>
