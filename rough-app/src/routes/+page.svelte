@@ -8,6 +8,7 @@
 	let showWelcome = $state(true);
 	let isConnecting = $state(false);
 	let errorMessage = $state('');
+	let showApiKey = $state(false);
 
 	function startApp() {
 		if (userName.trim() && apiKey.trim()) {
