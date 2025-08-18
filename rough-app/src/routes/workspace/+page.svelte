@@ -149,6 +149,30 @@
 		}
 	}
 
+	async function searchInPinecone(query) {
+		const apiKey = localStorage.getItem('pineconeApiKey');
+		if (!apiKey || !query.trim()) return [];
+
+		try {
+			const response = await fetch('/search-note', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					apiKey: apiKey,
+					text: query
+				})
+			});
+
+			if (response.ok) {
+				const results = await response.json();
+				return results.matches || [];
+			}
+		} catch (error) {
+			console.error('Pinecone search failed:', error);
+		}
+		return [];
+	}
+
 	function logout() {
 		localStorage.removeItem('userName');
 		localStorage.removeItem('todos');
