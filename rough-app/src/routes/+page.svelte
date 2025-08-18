@@ -441,6 +441,21 @@
 		text-align: center;
 	}
 
+	.info-message {
+		background: rgba(59, 130, 246, 0.1);
+		color: #2563eb;
+		padding: 0.75rem 1rem;
+		border-radius: 10px;
+		margin-bottom: 1rem;
+		border: 1px solid rgba(59, 130, 246, 0.2);
+		font-size: 0.9rem;
+		text-align: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+
 	.api-info {
 		background: rgba(255, 255, 255, 0.1);
 		padding: 1rem;
