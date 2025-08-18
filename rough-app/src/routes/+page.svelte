@@ -296,6 +296,25 @@
 		
 		.input-container {
 			padding: 1rem;
+			margin-bottom: 2rem;
+		}
+
+		.welcome-container {
+			padding: 1rem;
+		}
+
+		.title {
+			font-size: clamp(2.5rem, 8vw, 4rem);
+			margin-bottom: 0.75rem;
+		}
+
+		.subtitle {
+			font-size: clamp(1rem, 4vw, 1.2rem);
+			margin-bottom: 2rem;
+		}
+
+		.floating-card {
+			display: none;
 		}
 	}
 </style>
