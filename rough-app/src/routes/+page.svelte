@@ -237,6 +237,8 @@
 		cursor: pointer;
 		transition: all 0.3s ease;
 		box-shadow: 0 10px 25px rgba(238, 90, 36, 0.3);
+		position: relative;
+		z-index: 20;
 	}
 
 	.start-button:hover:not(:disabled) {
