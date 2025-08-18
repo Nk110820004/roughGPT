@@ -50,7 +50,7 @@
 	}
 
 	function getCategoryInfo(categoryId) {
-		return categories.find(c => c.id === categoryId) || { icon: '📋', color: '#667eea' };
+		return categories.find(c => c.id === categoryId) || { icon: 'TSK', color: '#667eea', name: 'Task' };
 	}
 
 	function formatDate(date) {
