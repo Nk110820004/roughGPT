@@ -40,17 +40,77 @@
 	}
 
 	async function testPineconeConnection(key) {
-		const response = await fetch('/create-index', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ apiKey: key })
-		});
+		try {
+			const response = await fetch('/create-index', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ apiKey: key })
+			});
 
-		if (!response.ok) {
-			throw new Error('API key validation failed');
+			if (!response.ok) {
+				const errorData = await response.text();
+				console.error('API response error:', errorData);
+				throw new Error('API key validation failed');
+			}
+
+			return await response.json();
+		} catch (error) {
+			console.error('API connection error:', error);
+			throw error;
 		}
+	}
 
-		return response.json();
+	async function checkOrCreateUser(username, apiKey) {
+		try {
+			// First try to search for existing user data
+			const searchResponse = await fetch('/search-note', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					apiKey: apiKey,
+					text: `User: ${username}`
+				})
+			});
+
+			if (searchResponse.ok) {
+				const searchResults = await searchResponse.json();
+				const userExists = searchResults.matches && searchResults.matches.length > 0;
+
+				if (userExists) {
+					// User exists, check if it's the correct user
+					const userMatch = searchResults.matches.find(match =>
+						match.metadata && match.metadata.text && match.metadata.text.includes(`User: ${username}`)
+					);
+
+					if (userMatch) {
+						return { success: true, message: 'Welcome back!' };
+					} else {
+						return { success: false, message: 'Username is incorrect. Please check and try again.' };
+					}
+				} else {
+					// New user, create entry
+					const createResponse = await fetch('/insert-note', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							apiKey: apiKey,
+							fullText: `User: ${username}\nAccount created: ${new Date().toISOString()}\nTodos: []`
+						})
+					});
+
+					if (createResponse.ok) {
+						return { success: true, message: 'Welcome! New account created.' };
+					} else {
+						return { success: false, message: 'Failed to create user account.' };
+					}
+				}
+			} else {
+				return { success: false, message: 'Failed to validate user.' };
+			}
+		} catch (error) {
+			console.error('User validation error:', error);
+			return { success: false, message: 'Error validating user account.' };
+		}
 	}
 
 	onMount(() => {
