@@ -837,7 +837,10 @@
 		transition: all 0.2s ease;
 		color: var(--text);
 		position: relative;
-		z-index: 1;
+		z-index: 10;
+		pointer-events: auto;
+		user-select: text;
+		cursor: text;
 	}
 
 	.new-task-input:focus {
