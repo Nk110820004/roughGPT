@@ -315,9 +315,14 @@
 		</nav>
 
 		<div class="sidebar-footer">
-			<button class="disconnect-btn" onclick={disconnectAPI}>
-				<AnimatedIcon name="disconnect" size={20} rotation={true} />
-				Disconnect Pinecone
+			<button class="disconnect-btn" onclick={disconnectAPI} disabled={isDisconnecting}>
+				{#if isDisconnecting}
+					<div class="loading-spinner-small"></div>
+					Disconnecting...
+				{:else}
+					<AnimatedIcon name="disconnect" size={20} rotation={true} />
+					Disconnect Pinecone
+				{/if}
 			</button>
 			<button class="logout-btn" onclick={logout}>
 				<AnimatedIcon name="logout" size={20} bounce={true} />
