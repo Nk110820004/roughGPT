@@ -180,24 +180,26 @@
 	}
 
 	function disconnectAPI() {
-		// Remove API-related data
+		// Remove all API-related data
 		localStorage.removeItem('pineconeApiKey');
 		localStorage.removeItem('pineconeConnected');
 		localStorage.removeItem('userName');
 		localStorage.removeItem('todos');
+
+		// Clear any other app-specific data
+		localStorage.clear();
 
 		// Show success animation
 		anime({
 			targets: '.disconnect-btn',
 			scale: [1, 1.2, 1],
 			duration: 300,
-			easing: 'easeOutBounce'
+			easing: 'easeOutBounce',
+			complete: () => {
+				// Redirect to homepage after animation completes
+				goto('/');
+			}
 		});
-
-		// Redirect after animation
-		setTimeout(() => {
-			goto('/');
-		}, 500);
 	}
 
 	// Drag and drop functions
