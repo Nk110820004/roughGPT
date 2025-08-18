@@ -22,12 +22,12 @@
 	let showQuickAdd = $state(false);
 
 	const categories = [
-		{ id: 'all', name: 'All Tasks', icon: '📋', color: '#6366f1' },
-		{ id: 'personal', name: 'Personal', icon: '🏠', color: '#ec4899' },
-		{ id: 'work', name: 'Work', icon: '💼', color: '#8b5cf6' },
-		{ id: 'shopping', name: 'Shopping', icon: '🛒', color: '#06b6d4' },
-		{ id: 'health', name: 'Health', icon: '🏃', color: '#10b981' },
-		{ id: 'learning', name: 'Learning', icon: '📚', color: '#f59e0b' }
+		{ id: 'all', name: 'All Tasks', icon: 'ALL', color: '#6366f1' },
+		{ id: 'personal', name: 'Personal', icon: 'PER', color: '#ec4899' },
+		{ id: 'work', name: 'Work', icon: 'WRK', color: '#8b5cf6' },
+		{ id: 'shopping', name: 'Shopping', icon: 'SHP', color: '#06b6d4' },
+		{ id: 'health', name: 'Health', icon: 'HTH', color: '#10b981' },
+		{ id: 'learning', name: 'Learning', icon: 'LRN', color: '#f59e0b' }
 	];
 
 	let selectedTodoCategory = $state('personal');
