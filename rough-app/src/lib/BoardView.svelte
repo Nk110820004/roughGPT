@@ -434,9 +434,14 @@
 	}
 
 	.empty-icon {
-		font-size: 2.5rem;
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.75rem;
 		opacity: 0.5;
+		color: var(--text-muted, #718096);
+	}
+
+	.empty-icon svg {
+		width: 32px;
+		height: 32px;
 	}
 
 	.empty-column p {
