@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import anime from 'animejs';
+	import * as anime from 'animejs';
 
 	let { 
 		name, 
