@@ -264,8 +264,24 @@
 	}
 
 	.feature-icon {
-		font-size: 2rem;
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.75rem;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 48px;
+		height: 48px;
+		margin: 0 auto 0.75rem;
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 12px;
+		color: white;
+	}
+
+	.feature-icon svg {
+		width: 24px;
+		height: 24px;
+		stroke: currentColor;
+		stroke-width: 2;
+		fill: none;
 	}
 
 	@media (max-width: 768px) {
