@@ -135,8 +135,10 @@
 
 	function disconnectAPI() {
 		// Remove API-related data
-		localStorage.removeItem('apiKey');
+		localStorage.removeItem('pineconeApiKey');
 		localStorage.removeItem('pineconeConnected');
+		localStorage.removeItem('userName');
+		localStorage.removeItem('todos');
 
 		// Show success animation
 		anime({
