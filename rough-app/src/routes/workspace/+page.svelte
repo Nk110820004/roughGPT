@@ -116,8 +116,30 @@
 		editText = '';
 	}
 
-	function saveTodos() {
+	async function saveTodos() {
+		// Save locally first
 		localStorage.setItem('todos', JSON.stringify(todos));
+
+		// Save to Pinecone
+		const apiKey = localStorage.getItem('pineconeApiKey');
+		if (apiKey && todos.length > 0) {
+			try {
+				const todosText = todos.map(todo =>
+					`${todo.text} - Category: ${todo.category} - Priority: ${todo.priority} - Status: ${todo.completed ? 'completed' : 'pending'}`
+				).join('\n');
+
+				await fetch('/insert-note', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						apiKey: apiKey,
+						fullText: `User: ${userName}\nTodos:\n${todosText}`
+					})
+				});
+			} catch (error) {
+				console.error('Failed to save to Pinecone:', error);
+			}
+		}
 	}
 
 	function loadTodos() {
