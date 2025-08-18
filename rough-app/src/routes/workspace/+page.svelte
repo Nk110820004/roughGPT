@@ -774,12 +774,33 @@
 		border: 1px solid rgba(245, 158, 11, 0.2);
 	}
 
-	.disconnect-btn:hover {
+	.disconnect-btn:hover:not(:disabled) {
 		background: linear-gradient(135deg, var(--warning), rgba(245, 158, 11, 0.8));
 		color: white;
 		transform: translateX(4px);
 		box-shadow: var(--shadow);
 		border-color: var(--warning);
+	}
+
+	.disconnect-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.loading-spinner-small {
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-radius: 50%;
+		border-top-color: currentColor;
+		animation: spin 1s ease-in-out infinite;
+		margin-right: 0.5rem;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 
 	/* Main Content */
