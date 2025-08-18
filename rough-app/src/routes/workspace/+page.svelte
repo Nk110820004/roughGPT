@@ -638,6 +638,28 @@
 		color: var(--text);
 	}
 
+	.connection-status {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--success);
+	}
+
+	.status-indicator {
+		width: 8px;
+		height: 8px;
+		background: var(--success);
+		border-radius: 50%;
+		animation: pulse-green 2s infinite;
+	}
+
+	@keyframes pulse-green {
+		0% { opacity: 1; }
+		50% { opacity: 0.5; }
+		100% { opacity: 1; }
+	}
+
 	.categories {
 		flex: 1;
 		padding: 1.5rem;
