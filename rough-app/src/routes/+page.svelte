@@ -44,7 +44,11 @@
 			const response = await fetch('/create-index', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ apiKey: key })
+				body: JSON.stringify({
+					apiKey: key,
+					cloud: 'aws',
+					region: 'us-east-1'
+				})
 			});
 
 			if (!response.ok) {
