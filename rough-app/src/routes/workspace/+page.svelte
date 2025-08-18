@@ -830,10 +830,13 @@
 		padding: 1rem 1.5rem;
 		border: 2px solid var(--border);
 		border-radius: 16px;
-		background: var(--background);
+		background: var(--surface);
 		font-size: 1rem;
 		outline: none;
 		transition: all 0.2s ease;
+		color: var(--text);
+		position: relative;
+		z-index: 1;
 	}
 
 	.new-task-input:focus {
