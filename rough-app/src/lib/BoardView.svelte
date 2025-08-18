@@ -50,7 +50,7 @@
 	}
 
 	function getCategoryInfo(categoryId) {
-		return categories.find(c => c.id === categoryId) || { icon: '📋', color: '#667eea' };
+		return categories.find(c => c.id === categoryId) || { icon: 'TSK', color: '#667eea', name: 'Task' };
 	}
 
 	function formatDate(date) {
@@ -164,7 +164,13 @@
 
 				{#if (todosByStatus[column.id]?.length || 0) === 0}
 					<div class="empty-column">
-						<div class="empty-icon">📋</div>
+						<div class="empty-icon">
+							<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M9 12l2 2 4-4"/>
+								<path d="M21 12c.552 0 1-.449 1-1V5c0-.551-.448-1-1-1H3c-.552 0-1 .449-1 1v6c0 .551.448 1 1 1h18z"/>
+								<path d="M3 12v7c0 .551.448 1 1 1h16c.552 0 1-.449 1-1v-7"/>
+							</svg>
+						</div>
 						<p>No tasks in {column.title.toLowerCase()}</p>
 					</div>
 				{/if}
@@ -300,7 +306,15 @@
 	}
 
 	.category-icon {
-		font-size: 1rem;
+		font-size: 0.65rem;
+		font-weight: 700;
+		background: var(--category-color);
+		color: white;
+		padding: 0.2rem 0.35rem;
+		border-radius: 4px;
+		letter-spacing: 0.5px;
+		min-width: 24px;
+		text-align: center;
 	}
 
 	.priority-indicator {
@@ -428,9 +442,14 @@
 	}
 
 	.empty-icon {
-		font-size: 2.5rem;
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.75rem;
 		opacity: 0.5;
+		color: var(--text-muted, #718096);
+	}
+
+	.empty-icon svg {
+		width: 32px;
+		height: 32px;
 	}
 
 	.empty-column p {

@@ -5,7 +5,7 @@
 	import BoardView from '$lib/BoardView.svelte';
 	import AnimatedIcon from '$lib/AnimatedIcon.svelte';
 	import FloatingActionButton from '$lib/FloatingActionButton.svelte';
-	import anime from 'animejs/lib/anime.es.js';
+	import * as anime from 'animejs';
 
 	let userName = $state('');
 	let todos = $state([]);
@@ -20,14 +20,15 @@
 	let showRichEditor = $state(false);
 	let newTodoRichText = $state('');
 	let showQuickAdd = $state(false);
+	let isDisconnecting = $state(false);
 
 	const categories = [
-		{ id: 'all', name: 'All Tasks', icon: '📋', color: '#6366f1' },
-		{ id: 'personal', name: 'Personal', icon: '🏠', color: '#ec4899' },
-		{ id: 'work', name: 'Work', icon: '💼', color: '#8b5cf6' },
-		{ id: 'shopping', name: 'Shopping', icon: '🛒', color: '#06b6d4' },
-		{ id: 'health', name: 'Health', icon: '🏃', color: '#10b981' },
-		{ id: 'learning', name: 'Learning', icon: '📚', color: '#f59e0b' }
+		{ id: 'all', name: 'All Tasks', icon: 'ALL', color: '#6366f1' },
+		{ id: 'personal', name: 'Personal', icon: 'PER', color: '#ec4899' },
+		{ id: 'work', name: 'Work', icon: 'WRK', color: '#8b5cf6' },
+		{ id: 'shopping', name: 'Shopping', icon: 'SHP', color: '#06b6d4' },
+		{ id: 'health', name: 'Health', icon: 'HTH', color: '#10b981' },
+		{ id: 'learning', name: 'Learning', icon: 'LRN', color: '#f59e0b' }
 	];
 
 	let selectedTodoCategory = $state('personal');
@@ -116,8 +117,30 @@
 		editText = '';
 	}
 
-	function saveTodos() {
+	async function saveTodos() {
+		// Save locally first
 		localStorage.setItem('todos', JSON.stringify(todos));
+
+		// Save to Pinecone
+		const apiKey = localStorage.getItem('pineconeApiKey');
+		if (apiKey && todos.length > 0) {
+			try {
+				const todosText = todos.map(todo =>
+					`${todo.text} - Category: ${todo.category} - Priority: ${todo.priority} - Status: ${todo.completed ? 'completed' : 'pending'}`
+				).join('\n');
+
+				await fetch('/insert-note', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						apiKey: apiKey,
+						fullText: `User: ${userName}\nTodos:\n${todosText}`
+					})
+				});
+			} catch (error) {
+				console.error('Failed to save to Pinecone:', error);
+			}
+		}
 	}
 
 	function loadTodos() {
@@ -127,6 +150,30 @@
 		}
 	}
 
+	async function searchInPinecone(query) {
+		const apiKey = localStorage.getItem('pineconeApiKey');
+		if (!apiKey || !query.trim()) return [];
+
+		try {
+			const response = await fetch('/search-note', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					apiKey: apiKey,
+					text: query
+				})
+			});
+
+			if (response.ok) {
+				const results = await response.json();
+				return results.matches || [];
+			}
+		} catch (error) {
+			console.error('Pinecone search failed:', error);
+		}
+		return [];
+	}
+
 	function logout() {
 		localStorage.removeItem('userName');
 		localStorage.removeItem('todos');
@@ -134,22 +181,28 @@
 	}
 
 	function disconnectAPI() {
-		// Remove API-related data
-		localStorage.removeItem('apiKey');
+		isDisconnecting = true;
+
+		// Remove all API-related data
+		localStorage.removeItem('pineconeApiKey');
 		localStorage.removeItem('pineconeConnected');
+		localStorage.removeItem('userName');
+		localStorage.removeItem('todos');
+
+		// Clear any other app-specific data
+		localStorage.clear();
 
 		// Show success animation
 		anime({
 			targets: '.disconnect-btn',
 			scale: [1, 1.2, 1],
 			duration: 300,
-			easing: 'easeOutBounce'
+			easing: 'easeOutBounce',
+			complete: () => {
+				// Redirect to homepage after animation completes
+				goto('/');
+			}
 		});
-
-		// Redirect after animation
-		setTimeout(() => {
-			goto('/');
-		}, 500);
 	}
 
 	// Drag and drop functions
@@ -181,7 +234,10 @@
 
 	onMount(() => {
 		const savedName = localStorage.getItem('userName');
-		if (!savedName) {
+		const pineconeConnected = localStorage.getItem('pineconeConnected');
+		const apiKey = localStorage.getItem('pineconeApiKey');
+
+		if (!savedName || !pineconeConnected || !apiKey) {
 			goto('/');
 			return;
 		}
@@ -230,7 +286,13 @@
 				<div class="user-avatar">
 					{userName.charAt(0).toUpperCase()}
 				</div>
-				<span class="user-name">{userName}</span>
+				<div class="user-details">
+					<span class="user-name">{userName}</span>
+					<div class="connection-status">
+						<div class="status-indicator"></div>
+						<span>Pinecone Connected</span>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -253,9 +315,14 @@
 		</nav>
 
 		<div class="sidebar-footer">
-			<button class="disconnect-btn" onclick={disconnectAPI}>
-				<AnimatedIcon name="disconnect" size={20} rotation={true} />
-				Disconnect API
+			<button class="disconnect-btn" onclick={disconnectAPI} disabled={isDisconnecting}>
+				{#if isDisconnecting}
+					<div class="loading-spinner-small"></div>
+					Disconnecting...
+				{:else}
+					<AnimatedIcon name="disconnect" size={20} rotation={true} />
+					Disconnect Pinecone
+				{/if}
 			</button>
 			<button class="logout-btn" onclick={logout}>
 				<AnimatedIcon name="logout" size={20} bounce={true} />
@@ -281,7 +348,7 @@
 				<div class="search-container">
 					<input
 						type="text"
-						placeholder="🔍 Find your perfect task..."
+						placeholder="Search tasks..."
 						bind:value={searchQuery}
 						class="search-input"
 					/>
@@ -316,7 +383,7 @@
 					class:active={showCompleted}
 					onclick={() => showCompleted = !showCompleted}
 				>
-					{showCompleted ? '👁️' : '👁️‍🗨️'} Show Completed
+					{showCompleted ? 'Hide' : 'Show'} Completed
 				</button>
 			</div>
 		</header>
@@ -326,7 +393,7 @@
 			<div class="add-task-form">
 				<input
 					type="text"
-					placeholder="✨ What amazing thing will you accomplish today?"
+					placeholder="What would you like to accomplish today?"
 					bind:value={newTodo}
 					class="new-task-input"
 					onkeypress={(e) => e.key === 'Enter' && addTodo()}
@@ -349,7 +416,12 @@
 		<div class="tasks-container">
 			{#if filteredTodos.length === 0}
 				<div class="empty-state">
-					<div class="empty-icon">📝</div>
+					<div class="empty-icon">
+						<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+							<path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+						</svg>
+					</div>
 					<h3>No tasks found</h3>
 					<p>
 						{searchQuery ? 'Try adjusting your search terms' : 'Create your first task to get started!'}
@@ -483,7 +555,6 @@
 		background: var(--background);
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 		position: relative;
-		overflow: hidden;
 	}
 
 	.workspace-container::before {
@@ -553,6 +624,12 @@
 		gap: 0.75rem;
 	}
 
+	.user-details {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
 	.user-avatar {
 		width: 40px;
 		height: 40px;
@@ -569,6 +646,28 @@
 	.user-name {
 		font-weight: 500;
 		color: var(--text);
+	}
+
+	.connection-status {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--success);
+	}
+
+	.status-indicator {
+		width: 8px;
+		height: 8px;
+		background: var(--success);
+		border-radius: 50%;
+		animation: pulse-green 2s infinite;
+	}
+
+	@keyframes pulse-green {
+		0% { opacity: 1; }
+		50% { opacity: 0.5; }
+		100% { opacity: 1; }
 	}
 
 	.categories {
@@ -615,7 +714,14 @@
 	}
 
 	.category-icon {
-		font-size: 1.2rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		background: rgba(255, 255, 255, 0.2);
+		padding: 0.25rem 0.4rem;
+		border-radius: 6px;
+		letter-spacing: 0.5px;
+		min-width: 32px;
+		text-align: center;
 	}
 
 	.category-name {
@@ -668,12 +774,33 @@
 		border: 1px solid rgba(245, 158, 11, 0.2);
 	}
 
-	.disconnect-btn:hover {
+	.disconnect-btn:hover:not(:disabled) {
 		background: linear-gradient(135deg, var(--warning), rgba(245, 158, 11, 0.8));
 		color: white;
 		transform: translateX(4px);
 		box-shadow: var(--shadow);
 		border-color: var(--warning);
+	}
+
+	.disconnect-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.loading-spinner-small {
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-radius: 50%;
+		border-top-color: currentColor;
+		animation: spin 1s ease-in-out infinite;
+		margin-right: 0.5rem;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 
 	/* Main Content */
@@ -802,6 +929,8 @@
 		padding: 2rem;
 		background: var(--surface);
 		border-bottom: 1px solid var(--border);
+		position: relative;
+		z-index: 2;
 	}
 
 
@@ -818,10 +947,16 @@
 		padding: 1rem 1.5rem;
 		border: 2px solid var(--border);
 		border-radius: 16px;
-		background: var(--background);
+		background: var(--surface);
 		font-size: 1rem;
 		outline: none;
 		transition: all 0.2s ease;
+		color: var(--text);
+		position: relative;
+		z-index: 10;
+		pointer-events: auto;
+		user-select: text;
+		cursor: text;
 	}
 
 	.new-task-input:focus {
@@ -904,8 +1039,14 @@
 	}
 
 	.empty-icon {
-		font-size: 4rem;
 		margin-bottom: 1rem;
+		color: var(--text-muted);
+		opacity: 0.6;
+	}
+
+	.empty-icon svg {
+		width: 48px;
+		height: 48px;
 	}
 
 	.tasks-list {
