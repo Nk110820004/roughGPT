@@ -181,6 +181,8 @@
 	}
 
 	function disconnectAPI() {
+		isDisconnecting = true;
+
 		// Remove all API-related data
 		localStorage.removeItem('pineconeApiKey');
 		localStorage.removeItem('pineconeConnected');
