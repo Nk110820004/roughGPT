@@ -78,17 +78,21 @@
 
 			if (searchResponse.ok) {
 				const searchResults = await searchResponse.json();
-				const userExists = searchResults.matches && searchResults.matches.length > 0;
 
-				if (userExists) {
-					// User exists, check if it's the correct user
-					const userMatch = searchResults.matches.find(match =>
-						match.metadata && match.metadata.text && match.metadata.text.includes(`User: ${username}`)
-					);
+				if (searchResults.matches && searchResults.matches.length > 0) {
+					// Check if any of the matches contain the exact username
+					const userMatch = searchResults.matches.find(match => {
+						if (match.metadata && match.metadata.text) {
+							return match.metadata.text.includes(`User: ${username}\n`) ||
+								   match.metadata.text.startsWith(`User: ${username}`);
+						}
+						return false;
+					});
 
 					if (userMatch) {
 						return { success: true, message: 'Welcome back!' };
 					} else {
+						// User searched but no exact match found
 						return { success: false, message: 'Username is incorrect. Please check and try again.' };
 					}
 				} else {
