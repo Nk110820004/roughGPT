@@ -48,19 +48,38 @@
 			
 			<div class="features-preview">
 				<div class="feature-item">
-					<div class="feature-icon">📝</div>
+					<div class="feature-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+							<path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+						</svg>
+					</div>
 					<span>Rich Text Editing</span>
 				</div>
 				<div class="feature-item">
-					<div class="feature-icon">🗂️</div>
+					<div class="feature-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+							<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+						</svg>
+					</div>
 					<span>Organize & Categorize</span>
 				</div>
 				<div class="feature-item">
-					<div class="feature-icon">🔍</div>
+					<div class="feature-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+							<circle cx="11" cy="11" r="8"/>
+							<path d="m21 21-4.35-4.35"/>
+						</svg>
+					</div>
 					<span>Powerful Search</span>
 				</div>
 				<div class="feature-item">
-					<div class="feature-icon">📱</div>
+					<div class="feature-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+							<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+							<line x1="12" y1="18" x2="12.01" y2="18"/>
+						</svg>
+					</div>
 					<span>Responsive Design</span>
 				</div>
 			</div>
