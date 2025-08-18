@@ -10,23 +10,32 @@
 	let errorMessage = $state('');
 	let showApiKey = $state(false);
 
-	function startApp() {
+	async function startApp() {
 		if (userName.trim() && apiKey.trim()) {
 			isConnecting = true;
 			errorMessage = '';
 
-			// Test the API key first
-			testPineconeConnection(apiKey.trim())
-				.then(() => {
-					localStorage.setItem('userName', userName);
+			try {
+				// First test if API key is valid
+				const apiTestResult = await testPineconeConnection(apiKey.trim());
+
+				// Now check if user exists or create new user
+				const userResult = await checkOrCreateUser(userName.trim(), apiKey.trim());
+
+				if (userResult.success) {
+					localStorage.setItem('userName', userName.trim());
 					localStorage.setItem('pineconeApiKey', apiKey.trim());
 					localStorage.setItem('pineconeConnected', 'true');
 					goto('/workspace');
-				})
-				.catch((error) => {
-					errorMessage = 'Invalid Pinecone API key. Please check and try again.';
+				} else {
+					errorMessage = userResult.message;
 					isConnecting = false;
-				});
+				}
+			} catch (error) {
+				console.error('Connection error:', error);
+				errorMessage = 'Invalid Pinecone API key. Please check and try again.';
+				isConnecting = false;
+			}
 		}
 	}
 
