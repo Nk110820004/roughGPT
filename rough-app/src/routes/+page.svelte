@@ -277,6 +277,79 @@
 		transform: translateY(-2px);
 	}
 
+	.api-input {
+		width: 100%;
+		padding: 1rem 1.5rem;
+		border: none;
+		border-radius: 15px;
+		font-size: 1rem;
+		background: rgba(255, 255, 255, 0.9);
+		margin-bottom: 1rem;
+		outline: none;
+		transition: all 0.3s ease;
+		position: relative;
+		z-index: 20;
+		pointer-events: auto;
+		cursor: text;
+		font-family: monospace;
+	}
+
+	.api-input:focus {
+		background: white;
+		box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+		transform: translateY(-2px);
+	}
+
+	.error-message {
+		background: rgba(239, 68, 68, 0.1);
+		color: #dc2626;
+		padding: 0.75rem 1rem;
+		border-radius: 10px;
+		margin-bottom: 1rem;
+		border: 1px solid rgba(239, 68, 68, 0.2);
+		font-size: 0.9rem;
+		text-align: center;
+	}
+
+	.api-info {
+		background: rgba(255, 255, 255, 0.1);
+		padding: 1rem;
+		border-radius: 15px;
+		margin-top: 1rem;
+		font-size: 0.85rem;
+		color: rgba(255, 255, 255, 0.9);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.api-info p {
+		margin: 0.5rem 0;
+	}
+
+	.api-info a {
+		color: #60a5fa;
+		text-decoration: none;
+		font-weight: 600;
+	}
+
+	.api-info a:hover {
+		text-decoration: underline;
+	}
+
+	.loading-spinner {
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-radius: 50%;
+		border-top-color: white;
+		animation: spin 1s ease-in-out infinite;
+		margin-right: 0.5rem;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+
 	.start-button {
 		width: 100%;
 		padding: 1rem 2rem;
