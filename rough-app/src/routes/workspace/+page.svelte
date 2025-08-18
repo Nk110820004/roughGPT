@@ -20,6 +20,7 @@
 	let showRichEditor = $state(false);
 	let newTodoRichText = $state('');
 	let showQuickAdd = $state(false);
+	let isDisconnecting = $state(false);
 
 	const categories = [
 		{ id: 'all', name: 'All Tasks', icon: 'ALL', color: '#6366f1' },
