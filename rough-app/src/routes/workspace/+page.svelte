@@ -614,6 +614,12 @@
 		gap: 0.75rem;
 	}
 
+	.user-details {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
 	.user-avatar {
 		width: 40px;
 		height: 40px;
