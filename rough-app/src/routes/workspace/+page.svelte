@@ -120,13 +120,15 @@
 	async function saveTodos() {
 		// Save locally first
 		localStorage.setItem('todos', JSON.stringify(todos));
+		console.log('Saving todos to Pinecone:', todos.length, 'tasks');
 
 		// Save to Pinecone
 		const apiKey = localStorage.getItem('pineconeApiKey');
 		if (apiKey) {
 			try {
 				// Delete existing user data first
-				await fetch('/delete-note', {
+				console.log('Deleting existing user data from Pinecone...');
+				const deleteResponse = await fetch('/delete-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -135,13 +137,18 @@
 					})
 				});
 
+				if (!deleteResponse.ok) {
+					console.warn('Delete operation had issues, but continuing...');
+				}
+
 				// Save updated data if there are todos
 				if (todos.length > 0) {
 					const todosText = todos.map(todo =>
 						`Task: ${todo.text} | Category: ${todo.category} | Priority: ${todo.priority} | Status: ${todo.completed ? 'completed' : 'pending'} | Created: ${new Date(todo.createdAt).toISOString()} | ID: ${todo.id}`
 					).join('\n');
 
-					await fetch('/insert-note', {
+					console.log('Inserting todos to Pinecone:', todosText.substring(0, 100) + '...');
+					const insertResponse = await fetch('/insert-note', {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
@@ -149,6 +156,14 @@
 							fullText: `User: ${userName}\nTaskData:\n${todosText}`
 						})
 					});
+
+					if (insertResponse.ok) {
+						console.log('Successfully saved tasks to Pinecone');
+					} else {
+						console.error('Failed to insert tasks to Pinecone:', await insertResponse.text());
+					}
+				} else {
+					console.log('No tasks to save to Pinecone');
 				}
 			} catch (error) {
 				console.error('Failed to save to Pinecone:', error);
