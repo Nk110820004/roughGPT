@@ -66,6 +66,8 @@
 
 	async function checkOrCreateUser(username, apiKey) {
 		try {
+			console.log('Checking for user:', username);
+
 			// First try to search for existing user data
 			const searchResponse = await fetch('/search-note', {
 				method: 'POST',
@@ -78,24 +80,45 @@
 
 			if (searchResponse.ok) {
 				const searchResults = await searchResponse.json();
+				console.log('Search results for user:', searchResults);
 
 				if (searchResults.matches && searchResults.matches.length > 0) {
 					// Check if any of the matches contain the exact username
 					const userMatch = searchResults.matches.find(match => {
-						if (match.metadata && match.metadata.text) {
-							return match.metadata.text.includes(`User: ${username}\n`) ||
-								   match.metadata.text.startsWith(`User: ${username}`);
-						}
-						return false;
+						const fullText = match.metadata?.text || match.metadata?.full_text || '';
+						console.log('Checking match:', fullText.substring(0, 100) + '...');
+
+						// More flexible matching for user data
+						return fullText.includes(`User: ${username}\n`) ||
+							   fullText.startsWith(`User: ${username}`) ||
+							   (fullText.includes(`User: ${username}`) && fullText.includes('Todos:'));
 					});
 
 					if (userMatch) {
+						console.log('Found existing user data');
 						return { success: true, message: 'Welcome back!' };
 					} else {
-						// User searched but no exact match found
-						return { success: false, message: 'Username is incorrect. Please check and try again.' };
+						console.log('User searched but no exact match found');
+						// New user, create entry
+						const createResponse = await fetch('/insert-note', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({
+								apiKey: apiKey,
+								fullText: `User: ${username}\nAccount created: ${new Date().toISOString()}\nTodos: []`
+							})
+						});
+
+						if (createResponse.ok) {
+							console.log('Created new user account');
+							return { success: true, message: 'Welcome! New account created.' };
+						} else {
+							console.error('Failed to create user account');
+							return { success: false, message: 'Failed to create user account.' };
+						}
 					}
 				} else {
+					console.log('No search results, creating new user');
 					// New user, create entry
 					const createResponse = await fetch('/insert-note', {
 						method: 'POST',
@@ -107,12 +130,15 @@
 					});
 
 					if (createResponse.ok) {
+						console.log('Created new user account');
 						return { success: true, message: 'Welcome! New account created.' };
 					} else {
+						console.error('Failed to create user account');
 						return { success: false, message: 'Failed to create user account.' };
 					}
 				}
 			} else {
+				console.error('Search request failed');
 				return { success: false, message: 'Failed to validate user.' };
 			}
 		} catch (error) {
