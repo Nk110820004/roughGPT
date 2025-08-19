@@ -5,7 +5,7 @@
 	import BoardView from '$lib/BoardView.svelte';
 	import AnimatedIcon from '$lib/AnimatedIcon.svelte';
 	import FloatingActionButton from '$lib/FloatingActionButton.svelte';
-	import { animate as anime } from 'animejs';
+	import anime from 'animejs';
 
 	let userName = $state('');
 	let todos = $state([]);
