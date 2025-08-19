@@ -42,7 +42,7 @@
 		return matchesSearch && matchesCategory && matchesCompletion;
 	}));
 
-	function addTodo() {
+	async function addTodo() {
 		const todoText = showRichEditor ? newTodoRichText : newTodo;
 		if (todoText && todoText.trim()) {
 			const todo = {
@@ -60,27 +60,27 @@
 			} else {
 				newTodo = '';
 			}
-			saveTodos();
+			await saveTodos();
 		}
 	}
 
-	function toggleTodo(id) {
-		todos = todos.map(todo => 
+	async function toggleTodo(id) {
+		todos = todos.map(todo =>
 			todo.id === id ? { ...todo, completed: !todo.completed } : todo
 		);
-		saveTodos();
+		await saveTodos();
 	}
 
-	function deleteTodo(id) {
+	async function deleteTodo(id) {
 		todos = todos.filter(todo => todo.id !== id);
-		saveTodos();
+		await saveTodos();
 	}
 
-	function updateTodo(updatedTodo) {
+	async function updateTodo(updatedTodo) {
 		todos = todos.map(todo =>
 			todo.id === updatedTodo.id ? updatedTodo : todo
 		);
-		saveTodos();
+		await saveTodos();
 	}
 
 	function startEdit(todo) {
@@ -88,7 +88,7 @@
 		editText = todo.text;
 	}
 
-	function saveEdit() {
+	async function saveEdit() {
 		if (editText.trim()) {
 			todos = todos.map(todo =>
 				todo.id === editingId ? { ...todo, text: editText.trim() } : todo
@@ -96,7 +96,7 @@
 		}
 		editingId = null;
 		editText = '';
-		saveTodos();
+		await saveTodos();
 	}
 
 	function quickAddTask() {
