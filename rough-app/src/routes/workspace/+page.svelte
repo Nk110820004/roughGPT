@@ -147,29 +147,23 @@
 					console.warn('Delete operation had issues, but continuing...');
 				}
 
-				// Save updated data if there are todos
-				if (todos.length > 0) {
-					const todosText = todos.map(todo =>
-						`Task: ${todo.text} | Category: ${todo.category} | Priority: ${todo.priority} | Status: ${todo.completed ? 'completed' : 'pending'} | Created: ${new Date(todo.createdAt).toISOString()} | ID: ${todo.id}`
-					).join('\n');
+				// Always save user data (even if no todos)
+				const userDataText = `User: ${userName}\nAccount created: ${new Date().toISOString()}\nTodos: ${JSON.stringify(todos)}`;
 
-					console.log('Inserting todos to Pinecone:', todosText.substring(0, 100) + '...');
-					const insertResponse = await fetch('/insert-note', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							apiKey: apiKey,
-							fullText: `User: ${userName}\nTaskData:\n${todosText}`
-						})
-					});
+				console.log('Inserting user data to Pinecone:', userDataText.substring(0, 100) + '...');
+				const insertResponse = await fetch('/insert-note', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						apiKey: apiKey,
+						fullText: userDataText
+					})
+				});
 
-					if (insertResponse.ok) {
-						console.log('Successfully saved tasks to Pinecone');
-					} else {
-						console.error('Failed to insert tasks to Pinecone:', await insertResponse.text());
-					}
+				if (insertResponse.ok) {
+					console.log('Successfully saved user data to Pinecone');
 				} else {
-					console.log('No tasks to save to Pinecone');
+					console.error('Failed to insert user data to Pinecone:', await insertResponse.text());
 				}
 			} catch (error) {
 				console.error('Failed to save to Pinecone:', error);
@@ -183,55 +177,89 @@
 		const apiKey = localStorage.getItem('pineconeApiKey');
 		if (apiKey) {
 			try {
-				console.log('Searching for tasks in Pinecone...');
+				console.log('Searching for user data in Pinecone...');
 				const response = await fetch('/search-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						apiKey: apiKey,
-						text: `User: ${userName} TaskData`
+						text: `User: ${userName}`
 					})
 				});
 
 				if (response.ok) {
 					const results = await response.json();
 					console.log('Pinecone search results:', results);
-					const userTasks = results.data?.find(item =>
-						item && item.includes(`User: ${userName}`) && item.includes('TaskData:')
-					);
 
-					if (userTasks) {
-						console.log('Found user tasks:', userTasks.substring(0, 200) + '...');
-						const tasksSection = userTasks.split('TaskData:')[1];
-						if (tasksSection) {
-							const taskLines = tasksSection.trim().split('\n').filter(line => line.trim());
-							const loadedTodos = [];
+					// Look through search matches for user data
+					if (results.matches && results.matches.length > 0) {
+						for (const match of results.matches) {
+							const fullText = match.metadata?.text || match.metadata?.full_text || '';
+							console.log('Checking match:', fullText.substring(0, 100) + '...');
 
-							taskLines.forEach(line => {
-								const taskMatch = line.match(/Task: (.*?) \| Category: (.*?) \| Priority: (.*?) \| Status: (.*?) \| Created: (.*?) \| ID: (.*?)$/);
-								if (taskMatch) {
-									const [, text, category, priority, status, createdAt, id] = taskMatch;
-									loadedTodos.push({
-										id: parseInt(id) || Date.now() + Math.random(),
-										text: text.trim(),
-										completed: status === 'completed',
-										category: category.trim(),
-										priority: priority.trim(),
-										createdAt: new Date(createdAt),
-										isRichText: false
-									});
+							if (fullText.includes(`User: ${userName}`)) {
+								console.log('Found user data:', fullText);
+
+								// Extract todos from the stored format
+								const loadedTodos = [];
+
+								// Look for existing todo format or parse from the text
+								if (fullText.includes('Todos:')) {
+									try {
+										// Try to extract JSON todos
+										const todosMatch = fullText.match(/Todos:\s*(\[.*?\])\s*$/s);
+										if (todosMatch && todosMatch[1] !== '[]') {
+											const todosData = JSON.parse(todosMatch[1]);
+											loadedTodos.push(...todosData.map(todo => ({
+												...todo,
+												createdAt: new Date(todo.createdAt),
+												id: todo.id || Date.now() + Math.random()
+											})));
+										}
+									} catch (e) {
+										console.warn('Failed to parse todos from stored format:', e);
+									}
 								}
-							});
 
-							console.log('Loaded todos from Pinecone:', loadedTodos.length, 'tasks');
-							if (loadedTodos.length > 0) {
-								todos = loadedTodos;
-								localStorage.setItem('todos', JSON.stringify(todos));
-								return;
+								// Also check for the detailed task format
+								if (fullText.includes('TaskData:')) {
+									const tasksSection = fullText.split('TaskData:')[1];
+									if (tasksSection) {
+										const taskLines = tasksSection.trim().split('\n').filter(line => line.trim() && line.includes('Task:'));
+
+										taskLines.forEach(line => {
+											const taskMatch = line.match(/Task: (.*?) \| Category: (.*?) \| Priority: (.*?) \| Status: (.*?) \| Created: (.*?) \| ID: (.*?)$/);
+											if (taskMatch) {
+												const [, text, category, priority, status, createdAt, id] = taskMatch;
+												loadedTodos.push({
+													id: parseInt(id) || Date.now() + Math.random(),
+													text: text.trim(),
+													completed: status === 'completed',
+													category: category.trim(),
+													priority: priority.trim(),
+													createdAt: new Date(createdAt),
+													isRichText: false
+												});
+											}
+										});
+									}
+								}
+
+								console.log('Loaded todos from Pinecone:', loadedTodos.length, 'tasks');
+								if (loadedTodos.length > 0) {
+									todos = loadedTodos;
+									localStorage.setItem('todos', JSON.stringify(todos));
+									return;
+								} else {
+									console.log('User found but no todos in their data');
+									todos = [];
+									return;
+								}
 							}
 						}
+						console.log('No user data found in Pinecone matches');
 					} else {
-						console.log('No user tasks found in Pinecone search results');
+						console.log('No search results from Pinecone');
 					}
 				} else {
 					console.error('Pinecone search failed:', await response.text());
@@ -241,15 +269,24 @@
 			}
 		}
 
-		// Fallback to localStorage
-		console.log('Loading from localStorage...');
+		// Fallback to localStorage only if we don't have any data
+		console.log('Loading from localStorage as fallback...');
 		const saved = localStorage.getItem('todos');
 		if (saved) {
-			const localTodos = JSON.parse(saved);
-			console.log('Loaded from localStorage:', localTodos.length, 'tasks');
-			todos = localTodos;
+			try {
+				const localTodos = JSON.parse(saved);
+				console.log('Loaded from localStorage:', localTodos.length, 'tasks');
+				todos = localTodos.map(todo => ({
+					...todo,
+					createdAt: new Date(todo.createdAt)
+				}));
+			} catch (e) {
+				console.error('Failed to parse localStorage todos:', e);
+				todos = [];
+			}
 		} else {
 			console.log('No tasks found in localStorage');
+			todos = [];
 		}
 	}
 
