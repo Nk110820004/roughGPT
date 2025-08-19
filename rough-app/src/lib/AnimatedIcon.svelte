@@ -50,12 +50,15 @@
 		});
 
 		if (rotation) {
-			anime({
-				targets: iconElement.querySelector('svg'),
-				rotate: '1turn',
-				duration: 600,
-				easing: 'easeInOutQuad'
-			});
+			const rotateTarget = iconElement.querySelector('svg') || iconElement.querySelector('img');
+			if (rotateTarget) {
+				anime({
+					targets: rotateTarget,
+					rotate: '1turn',
+					duration: 600,
+					easing: 'easeInOutQuad'
+				});
+			}
 		}
 
 		if (bounce) {
