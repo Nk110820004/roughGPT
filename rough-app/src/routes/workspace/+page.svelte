@@ -123,27 +123,95 @@
 
 		// Save to Pinecone
 		const apiKey = localStorage.getItem('pineconeApiKey');
-		if (apiKey && todos.length > 0) {
+		if (apiKey) {
 			try {
-				const todosText = todos.map(todo =>
-					`${todo.text} - Category: ${todo.category} - Priority: ${todo.priority} - Status: ${todo.completed ? 'completed' : 'pending'}`
-				).join('\n');
-
-				await fetch('/insert-note', {
+				// Delete existing user data first
+				await fetch('/delete-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						apiKey: apiKey,
-						fullText: `User: ${userName}\nTodos:\n${todosText}`
+						fullText: `User: ${userName}`
 					})
 				});
+
+				// Save updated data if there are todos
+				if (todos.length > 0) {
+					const todosText = todos.map(todo =>
+						`Task: ${todo.text} | Category: ${todo.category} | Priority: ${todo.priority} | Status: ${todo.completed ? 'completed' : 'pending'} | Created: ${new Date(todo.createdAt).toISOString()} | ID: ${todo.id}`
+					).join('\n');
+
+					await fetch('/insert-note', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							apiKey: apiKey,
+							fullText: `User: ${userName}\nTaskData:\n${todosText}`
+						})
+					});
+				}
 			} catch (error) {
 				console.error('Failed to save to Pinecone:', error);
 			}
 		}
 	}
 
-	function loadTodos() {
+	async function loadTodos() {
+		// Try to load from Pinecone first
+		const apiKey = localStorage.getItem('pineconeApiKey');
+		if (apiKey) {
+			try {
+				const response = await fetch('/search-note', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						apiKey: apiKey,
+						text: `User: ${userName} TaskData`
+					})
+				});
+
+				if (response.ok) {
+					const results = await response.json();
+					const userTasks = results.data?.find(item =>
+						item && item.includes(`User: ${userName}`) && item.includes('TaskData:')
+					);
+
+					if (userTasks) {
+						const tasksSection = userTasks.split('TaskData:')[1];
+						if (tasksSection) {
+							const taskLines = tasksSection.trim().split('\n').filter(line => line.trim());
+							const loadedTodos = [];
+
+							taskLines.forEach(line => {
+								const taskMatch = line.match(/Task: (.*?) \| Category: (.*?) \| Priority: (.*?) \| Status: (.*?) \| Created: (.*?) \| ID: (.*?)$/);
+								if (taskMatch) {
+									const [, text, category, priority, status, createdAt, id] = taskMatch;
+									loadedTodos.push({
+										id: parseInt(id) || Date.now() + Math.random(),
+										text: text.trim(),
+										completed: status === 'completed',
+										category: category.trim(),
+										priority: priority.trim(),
+										createdAt: new Date(createdAt),
+										isRichText: false
+									});
+								}
+							});
+
+							if (loadedTodos.length > 0) {
+								todos = loadedTodos;
+								localStorage.setItem('todos', JSON.stringify(todos));
+								return;
+							}
+						}
+					}
+				}
+			} catch (error) {
+				console.error('Failed to load from Pinecone, falling back to localStorage:', error);
+			}
+		}
+
+		// Fallback to localStorage
 		const saved = localStorage.getItem('todos');
 		if (saved) {
 			todos = JSON.parse(saved);
@@ -232,7 +300,7 @@
 		draggedItem = null;
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		const savedName = localStorage.getItem('userName');
 		const pineconeConnected = localStorage.getItem('pineconeConnected');
 		const apiKey = localStorage.getItem('pineconeApiKey');
@@ -242,7 +310,7 @@
 			return;
 		}
 		userName = savedName;
-		loadTodos();
+		await loadTodos();
 
 		// Entry animations
 		anime.timeline({
