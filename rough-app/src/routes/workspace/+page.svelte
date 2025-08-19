@@ -72,8 +72,14 @@
 	}
 
 	async function deleteTodo(id) {
+		console.log('Deleting task with ID:', id);
+		const taskToDelete = todos.find(todo => todo.id === id);
+		if (taskToDelete) {
+			console.log('Deleting task:', taskToDelete.text);
+		}
 		todos = todos.filter(todo => todo.id !== id);
 		await saveTodos();
+		console.log('Task deleted, remaining tasks:', todos.length);
 	}
 
 	async function updateTodo(updatedTodo) {
