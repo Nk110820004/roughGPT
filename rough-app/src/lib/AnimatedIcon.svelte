@@ -129,7 +129,7 @@
 	onmouseleave={animateLeave}
 	onclick={onclick ? animateClick : null}
 	role={onclick ? 'button' : 'img'}
-	tabindex={onclick ? 0 : -1}
+	tabindex={onclick ? 0 : null}
 	onkeydown={(e) => onclick && (e.key === 'Enter' || e.key === ' ') && animateClick()}
 	style="width: {size}px; height: {size}px; color: {color};"
 	{...rest}
