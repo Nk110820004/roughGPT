@@ -5,7 +5,7 @@
 	import BoardView from '$lib/BoardView.svelte';
 	import AnimatedIcon from '$lib/AnimatedIcon.svelte';
 	import FloatingActionButton from '$lib/FloatingActionButton.svelte';
-	import * as anime from 'animejs';
+	import { animate as anime } from 'animejs';
 
 	let userName = $state('');
 	let todos = $state([]);
@@ -42,7 +42,7 @@
 		return matchesSearch && matchesCategory && matchesCompletion;
 	}));
 
-	function addTodo() {
+	async function addTodo() {
 		const todoText = showRichEditor ? newTodoRichText : newTodo;
 		if (todoText && todoText.trim()) {
 			const todo = {
@@ -60,27 +60,33 @@
 			} else {
 				newTodo = '';
 			}
-			saveTodos();
+			await saveTodos();
 		}
 	}
 
-	function toggleTodo(id) {
-		todos = todos.map(todo => 
+	async function toggleTodo(id) {
+		todos = todos.map(todo =>
 			todo.id === id ? { ...todo, completed: !todo.completed } : todo
 		);
-		saveTodos();
+		await saveTodos();
 	}
 
-	function deleteTodo(id) {
+	async function deleteTodo(id) {
+		console.log('Deleting task with ID:', id);
+		const taskToDelete = todos.find(todo => todo.id === id);
+		if (taskToDelete) {
+			console.log('Deleting task:', taskToDelete.text);
+		}
 		todos = todos.filter(todo => todo.id !== id);
-		saveTodos();
+		await saveTodos();
+		console.log('Task deleted, remaining tasks:', todos.length);
 	}
 
-	function updateTodo(updatedTodo) {
+	async function updateTodo(updatedTodo) {
 		todos = todos.map(todo =>
 			todo.id === updatedTodo.id ? updatedTodo : todo
 		);
-		saveTodos();
+		await saveTodos();
 	}
 
 	function startEdit(todo) {
@@ -88,7 +94,7 @@
 		editText = todo.text;
 	}
 
-	function saveEdit() {
+	async function saveEdit() {
 		if (editText.trim()) {
 			todos = todos.map(todo =>
 				todo.id === editingId ? { ...todo, text: editText.trim() } : todo
@@ -96,7 +102,7 @@
 		}
 		editingId = null;
 		editText = '';
-		saveTodos();
+		await saveTodos();
 	}
 
 	function quickAddTask() {
@@ -120,33 +126,130 @@
 	async function saveTodos() {
 		// Save locally first
 		localStorage.setItem('todos', JSON.stringify(todos));
+		console.log('Saving todos to Pinecone:', todos.length, 'tasks');
 
 		// Save to Pinecone
 		const apiKey = localStorage.getItem('pineconeApiKey');
-		if (apiKey && todos.length > 0) {
+		if (apiKey) {
 			try {
-				const todosText = todos.map(todo =>
-					`${todo.text} - Category: ${todo.category} - Priority: ${todo.priority} - Status: ${todo.completed ? 'completed' : 'pending'}`
-				).join('\n');
-
-				await fetch('/insert-note', {
+				// Delete existing user data first
+				console.log('Deleting existing user data from Pinecone...');
+				const deleteResponse = await fetch('/delete-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						apiKey: apiKey,
-						fullText: `User: ${userName}\nTodos:\n${todosText}`
+						fullText: `User: ${userName}`
 					})
 				});
+
+				if (!deleteResponse.ok) {
+					console.warn('Delete operation had issues, but continuing...');
+				}
+
+				// Save updated data if there are todos
+				if (todos.length > 0) {
+					const todosText = todos.map(todo =>
+						`Task: ${todo.text} | Category: ${todo.category} | Priority: ${todo.priority} | Status: ${todo.completed ? 'completed' : 'pending'} | Created: ${new Date(todo.createdAt).toISOString()} | ID: ${todo.id}`
+					).join('\n');
+
+					console.log('Inserting todos to Pinecone:', todosText.substring(0, 100) + '...');
+					const insertResponse = await fetch('/insert-note', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							apiKey: apiKey,
+							fullText: `User: ${userName}\nTaskData:\n${todosText}`
+						})
+					});
+
+					if (insertResponse.ok) {
+						console.log('Successfully saved tasks to Pinecone');
+					} else {
+						console.error('Failed to insert tasks to Pinecone:', await insertResponse.text());
+					}
+				} else {
+					console.log('No tasks to save to Pinecone');
+				}
 			} catch (error) {
 				console.error('Failed to save to Pinecone:', error);
 			}
 		}
 	}
 
-	function loadTodos() {
+	async function loadTodos() {
+		console.log('Loading todos for user:', userName);
+		// Try to load from Pinecone first
+		const apiKey = localStorage.getItem('pineconeApiKey');
+		if (apiKey) {
+			try {
+				console.log('Searching for tasks in Pinecone...');
+				const response = await fetch('/search-note', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						apiKey: apiKey,
+						text: `User: ${userName} TaskData`
+					})
+				});
+
+				if (response.ok) {
+					const results = await response.json();
+					console.log('Pinecone search results:', results);
+					const userTasks = results.data?.find(item =>
+						item && item.includes(`User: ${userName}`) && item.includes('TaskData:')
+					);
+
+					if (userTasks) {
+						console.log('Found user tasks:', userTasks.substring(0, 200) + '...');
+						const tasksSection = userTasks.split('TaskData:')[1];
+						if (tasksSection) {
+							const taskLines = tasksSection.trim().split('\n').filter(line => line.trim());
+							const loadedTodos = [];
+
+							taskLines.forEach(line => {
+								const taskMatch = line.match(/Task: (.*?) \| Category: (.*?) \| Priority: (.*?) \| Status: (.*?) \| Created: (.*?) \| ID: (.*?)$/);
+								if (taskMatch) {
+									const [, text, category, priority, status, createdAt, id] = taskMatch;
+									loadedTodos.push({
+										id: parseInt(id) || Date.now() + Math.random(),
+										text: text.trim(),
+										completed: status === 'completed',
+										category: category.trim(),
+										priority: priority.trim(),
+										createdAt: new Date(createdAt),
+										isRichText: false
+									});
+								}
+							});
+
+							console.log('Loaded todos from Pinecone:', loadedTodos.length, 'tasks');
+							if (loadedTodos.length > 0) {
+								todos = loadedTodos;
+								localStorage.setItem('todos', JSON.stringify(todos));
+								return;
+							}
+						}
+					} else {
+						console.log('No user tasks found in Pinecone search results');
+					}
+				} else {
+					console.error('Pinecone search failed:', await response.text());
+				}
+			} catch (error) {
+				console.error('Failed to load from Pinecone, falling back to localStorage:', error);
+			}
+		}
+
+		// Fallback to localStorage
+		console.log('Loading from localStorage...');
 		const saved = localStorage.getItem('todos');
 		if (saved) {
-			todos = JSON.parse(saved);
+			const localTodos = JSON.parse(saved);
+			console.log('Loaded from localStorage:', localTodos.length, 'tasks');
+			todos = localTodos;
+		} else {
+			console.log('No tasks found in localStorage');
 		}
 	}
 
@@ -232,7 +335,7 @@
 		draggedItem = null;
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		const savedName = localStorage.getItem('userName');
 		const pineconeConnected = localStorage.getItem('pineconeConnected');
 		const apiKey = localStorage.getItem('pineconeApiKey');
@@ -242,7 +345,7 @@
 			return;
 		}
 		userName = savedName;
-		loadTodos();
+		await loadTodos();
 
 		// Entry animations
 		anime.timeline({
@@ -1035,13 +1138,28 @@
 	.empty-state {
 		text-align: center;
 		padding: 4rem 2rem;
-		color: var(--text-muted);
+		color: white;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	.empty-state h3 {
+		color: white;
+		font-size: 1.5rem;
+		margin-bottom: 0.5rem;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	.empty-state p {
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 1rem;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.empty-icon {
 		margin-bottom: 1rem;
-		color: var(--text-muted);
-		opacity: 0.6;
+		color: white;
+		opacity: 0.8;
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 	}
 
 	.empty-icon svg {
