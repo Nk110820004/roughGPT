@@ -132,7 +132,7 @@
 		const apiKey = localStorage.getItem('pineconeApiKey');
 		if (apiKey) {
 			try {
-				// Delete existing user data first
+				// Delete existing user data first using a more specific search pattern
 				console.log('Deleting existing user data from Pinecone...');
 				const deleteResponse = await fetch('/delete-note', {
 					method: 'POST',
@@ -147,7 +147,7 @@
 					console.warn('Delete operation had issues, but continuing...');
 				}
 
-				// Always save user data (even if no todos)
+				// Always save user data with consistent format
 				const userDataText = `User: ${userName}\nAccount created: ${new Date().toISOString()}\nTodos: ${JSON.stringify(todos)}`;
 
 				console.log('Inserting user data to Pinecone:', userDataText.substring(0, 100) + '...');
@@ -168,6 +168,8 @@
 			} catch (error) {
 				console.error('Failed to save to Pinecone:', error);
 			}
+		} else {
+			console.warn('No API key found, cannot save to Pinecone');
 		}
 	}
 
