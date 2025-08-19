@@ -315,15 +315,24 @@
 	}
 
 	function logout() {
+		console.log('Logging out user:', userName);
+
+		// Clear user-specific data but keep API connection
 		localStorage.removeItem('userName');
 		localStorage.removeItem('todos');
+
+		// Clear any session-specific data
+		sessionStorage.clear();
+
+		console.log('User logged out, redirecting to home page');
 		goto('/');
 	}
 
 	function disconnectAPI() {
+		console.log('Disconnecting API for user:', userName);
 		isDisconnecting = true;
 
-		// Remove all API-related data
+		// Remove all API-related data and user data
 		localStorage.removeItem('pineconeApiKey');
 		localStorage.removeItem('pineconeConnected');
 		localStorage.removeItem('userName');
@@ -331,6 +340,9 @@
 
 		// Clear any other app-specific data
 		localStorage.clear();
+		sessionStorage.clear();
+
+		console.log('API disconnected, all data cleared');
 
 		// Show success animation
 		anime({
@@ -339,8 +351,10 @@
 			duration: 300,
 			easing: 'easeOutBounce',
 			complete: () => {
-				// Redirect to homepage after animation completes
-				goto('/');
+				console.log('Redirecting to home page after disconnect');
+				// Ensure we navigate to root and reset state
+				isDisconnecting = false;
+				goto('/', { replaceState: true });
 			}
 		});
 	}
