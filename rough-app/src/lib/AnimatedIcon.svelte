@@ -50,12 +50,15 @@
 		});
 
 		if (rotation) {
-			anime({
-				targets: iconElement.querySelector('svg'),
-				rotate: '1turn',
-				duration: 600,
-				easing: 'easeInOutQuad'
-			});
+			const rotateTarget = iconElement.querySelector('svg') || iconElement.querySelector('img');
+			if (rotateTarget) {
+				anime({
+					targets: rotateTarget,
+					rotate: '1turn',
+					duration: 600,
+					easing: 'easeInOutQuad'
+				});
+			}
 		}
 
 		if (bounce) {
@@ -100,24 +103,30 @@
 	}
 
 	onMount(() => {
-		if (pulse && iconElement) {
+		if (!iconElement) return;
+
+		try {
+			if (pulse) {
+				anime({
+					targets: iconElement,
+					scale: [1, 1.05, 1],
+					duration: 2000,
+					loop: true,
+					easing: 'easeInOutSine'
+				});
+			}
+
+			// Stagger animation for initial load
 			anime({
 				targets: iconElement,
-				scale: [1, 1.05, 1],
-				duration: 2000,
-				loop: true,
-				easing: 'easeInOutSine'
+				opacity: [0, 1],
+				scale: [0.8, 1],
+				duration: 400,
+				easing: 'easeOutBack'
 			});
+		} catch (error) {
+			console.warn('AnimatedIcon animation error:', error);
 		}
-
-		// Stagger animation for initial load
-		anime({
-			targets: iconElement,
-			opacity: [0, 1],
-			scale: [0.8, 1],
-			duration: 400,
-			easing: 'easeOutBack'
-		});
 	});
 </script>
 

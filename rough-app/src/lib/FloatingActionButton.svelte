@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import * as anime from 'animejs';
+	import { animate as anime } from 'animejs';
 	import AnimatedIcon from './AnimatedIcon.svelte';
 
 	let { onclick, icon = 'add', size = 56, color = '#6366f1' } = $props();

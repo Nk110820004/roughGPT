@@ -132,7 +132,7 @@
 		const apiKey = localStorage.getItem('pineconeApiKey');
 		if (apiKey) {
 			try {
-				// Delete existing user data first
+				// Delete existing user data first using a more specific search pattern
 				console.log('Deleting existing user data from Pinecone...');
 				const deleteResponse = await fetch('/delete-note', {
 					method: 'POST',
@@ -147,7 +147,7 @@
 					console.warn('Delete operation had issues, but continuing...');
 				}
 
-				// Always save user data (even if no todos)
+				// Always save user data with consistent format
 				const userDataText = `User: ${userName}\nAccount created: ${new Date().toISOString()}\nTodos: ${JSON.stringify(todos)}`;
 
 				console.log('Inserting user data to Pinecone:', userDataText.substring(0, 100) + '...');
@@ -168,6 +168,8 @@
 			} catch (error) {
 				console.error('Failed to save to Pinecone:', error);
 			}
+		} else {
+			console.warn('No API key found, cannot save to Pinecone');
 		}
 	}
 
@@ -197,7 +199,11 @@
 							const fullText = match.metadata?.text || match.metadata?.full_text || '';
 							console.log('Checking match:', fullText.substring(0, 100) + '...');
 
-							if (fullText.includes(`User: ${userName}`)) {
+							// More flexible matching for user data
+							if (fullText.includes(`User: ${userName}\n`) ||
+								fullText.startsWith(`User: ${userName}`) ||
+								(fullText.includes(`User: ${userName}`) && fullText.includes('Todos:'))) {
+
 								console.log('Found user data:', fullText);
 
 								// Extract todos from the stored format
@@ -221,7 +227,7 @@
 									}
 								}
 
-								// Also check for the detailed task format
+								// Also check for the detailed task format in case it's stored differently
 								if (fullText.includes('TaskData:')) {
 									const tasksSection = fullText.split('TaskData:')[1];
 									if (tasksSection) {
@@ -246,15 +252,11 @@
 								}
 
 								console.log('Loaded todos from Pinecone:', loadedTodos.length, 'tasks');
+								todos = loadedTodos;
 								if (loadedTodos.length > 0) {
-									todos = loadedTodos;
 									localStorage.setItem('todos', JSON.stringify(todos));
-									return;
-								} else {
-									console.log('User found but no todos in their data');
-									todos = [];
-									return;
 								}
+								return;
 							}
 						}
 						console.log('No user data found in Pinecone matches');
@@ -269,7 +271,7 @@
 			}
 		}
 
-		// Fallback to localStorage only if we don't have any data
+		// Fallback to localStorage only if we don't have any data from Pinecone
 		console.log('Loading from localStorage as fallback...');
 		const saved = localStorage.getItem('todos');
 		if (saved) {
@@ -285,7 +287,7 @@
 				todos = [];
 			}
 		} else {
-			console.log('No tasks found in localStorage');
+			console.log('No tasks found in localStorage, initializing empty');
 			todos = [];
 		}
 	}
@@ -315,15 +317,24 @@
 	}
 
 	function logout() {
+		console.log('Logging out user:', userName);
+
+		// Clear user-specific data but keep API connection
 		localStorage.removeItem('userName');
 		localStorage.removeItem('todos');
+
+		// Clear any session-specific data
+		sessionStorage.clear();
+
+		console.log('User logged out, redirecting to home page');
 		goto('/');
 	}
 
 	function disconnectAPI() {
+		console.log('Disconnecting API for user:', userName);
 		isDisconnecting = true;
 
-		// Remove all API-related data
+		// Remove all API-related data and user data
 		localStorage.removeItem('pineconeApiKey');
 		localStorage.removeItem('pineconeConnected');
 		localStorage.removeItem('userName');
@@ -331,6 +342,9 @@
 
 		// Clear any other app-specific data
 		localStorage.clear();
+		sessionStorage.clear();
+
+		console.log('API disconnected, all data cleared');
 
 		// Show success animation
 		anime({
@@ -339,8 +353,10 @@
 			duration: 300,
 			easing: 'easeOutBounce',
 			complete: () => {
-				// Redirect to homepage after animation completes
-				goto('/');
+				console.log('Redirecting to home page after disconnect');
+				// Ensure we navigate to root and reset state
+				isDisconnecting = false;
+				goto('/', { replaceState: true });
 			}
 		});
 	}
