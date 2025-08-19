@@ -172,10 +172,12 @@
 	}
 
 	async function loadTodos() {
+		console.log('Loading todos for user:', userName);
 		// Try to load from Pinecone first
 		const apiKey = localStorage.getItem('pineconeApiKey');
 		if (apiKey) {
 			try {
+				console.log('Searching for tasks in Pinecone...');
 				const response = await fetch('/search-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -187,11 +189,13 @@
 
 				if (response.ok) {
 					const results = await response.json();
+					console.log('Pinecone search results:', results);
 					const userTasks = results.data?.find(item =>
 						item && item.includes(`User: ${userName}`) && item.includes('TaskData:')
 					);
 
 					if (userTasks) {
+						console.log('Found user tasks:', userTasks.substring(0, 200) + '...');
 						const tasksSection = userTasks.split('TaskData:')[1];
 						if (tasksSection) {
 							const taskLines = tasksSection.trim().split('\n').filter(line => line.trim());
@@ -213,13 +217,18 @@
 								}
 							});
 
+							console.log('Loaded todos from Pinecone:', loadedTodos.length, 'tasks');
 							if (loadedTodos.length > 0) {
 								todos = loadedTodos;
 								localStorage.setItem('todos', JSON.stringify(todos));
 								return;
 							}
 						}
+					} else {
+						console.log('No user tasks found in Pinecone search results');
 					}
+				} else {
+					console.error('Pinecone search failed:', await response.text());
 				}
 			} catch (error) {
 				console.error('Failed to load from Pinecone, falling back to localStorage:', error);
@@ -227,9 +236,14 @@
 		}
 
 		// Fallback to localStorage
+		console.log('Loading from localStorage...');
 		const saved = localStorage.getItem('todos');
 		if (saved) {
-			todos = JSON.parse(saved);
+			const localTodos = JSON.parse(saved);
+			console.log('Loaded from localStorage:', localTodos.length, 'tasks');
+			todos = localTodos;
+		} else {
+			console.log('No tasks found in localStorage');
 		}
 	}
 
