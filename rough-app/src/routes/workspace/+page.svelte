@@ -197,7 +197,11 @@
 							const fullText = match.metadata?.text || match.metadata?.full_text || '';
 							console.log('Checking match:', fullText.substring(0, 100) + '...');
 
-							if (fullText.includes(`User: ${userName}`)) {
+							// More flexible matching for user data
+							if (fullText.includes(`User: ${userName}\n`) ||
+								fullText.startsWith(`User: ${userName}`) ||
+								(fullText.includes(`User: ${userName}`) && fullText.includes('Todos:'))) {
+
 								console.log('Found user data:', fullText);
 
 								// Extract todos from the stored format
@@ -221,7 +225,7 @@
 									}
 								}
 
-								// Also check for the detailed task format
+								// Also check for the detailed task format in case it's stored differently
 								if (fullText.includes('TaskData:')) {
 									const tasksSection = fullText.split('TaskData:')[1];
 									if (tasksSection) {
@@ -246,15 +250,11 @@
 								}
 
 								console.log('Loaded todos from Pinecone:', loadedTodos.length, 'tasks');
+								todos = loadedTodos;
 								if (loadedTodos.length > 0) {
-									todos = loadedTodos;
 									localStorage.setItem('todos', JSON.stringify(todos));
-									return;
-								} else {
-									console.log('User found but no todos in their data');
-									todos = [];
-									return;
 								}
+								return;
 							}
 						}
 						console.log('No user data found in Pinecone matches');
@@ -269,7 +269,7 @@
 			}
 		}
 
-		// Fallback to localStorage only if we don't have any data
+		// Fallback to localStorage only if we don't have any data from Pinecone
 		console.log('Loading from localStorage as fallback...');
 		const saved = localStorage.getItem('todos');
 		if (saved) {
@@ -285,7 +285,7 @@
 				todos = [];
 			}
 		} else {
-			console.log('No tasks found in localStorage');
+			console.log('No tasks found in localStorage, initializing empty');
 			todos = [];
 		}
 	}
