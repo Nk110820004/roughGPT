@@ -1103,13 +1103,28 @@
 	.empty-state {
 		text-align: center;
 		padding: 4rem 2rem;
-		color: var(--text-muted);
+		color: white;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	.empty-state h3 {
+		color: white;
+		font-size: 1.5rem;
+		margin-bottom: 0.5rem;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	.empty-state p {
+		color: rgba(255, 255, 255, 0.9);
+		font-size: 1rem;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.empty-icon {
 		margin-bottom: 1rem;
-		color: var(--text-muted);
-		opacity: 0.6;
+		color: white;
+		opacity: 0.8;
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 	}
 
 	.empty-icon svg {
