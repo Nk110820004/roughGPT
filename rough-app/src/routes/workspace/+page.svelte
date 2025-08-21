@@ -7,40 +7,265 @@
 	import FloatingActionButton from '$lib/FloatingActionButton.svelte';
 	import { animate as anime } from 'animejs';
 
-	let userName = $state('');
+	let userName = '';
 	let todos = $state([]);
+	let notes = $state([]);
 	let newTodo = $state('');
 	let searchQuery = $state('');
 	let selectedCategory = $state('all');
-	let showCompleted = $state(true);
-	let editingId = $state(null);
-	let editText = $state('');
-	let draggedItem = $state(null);
-	let currentView = $state('list'); // 'list', 'board', 'calendar'
-	let showRichEditor = $state(false);
-	let newTodoRichText = $state('');
-	let showQuickAdd = $state(false);
+	let showCompleted = true;
+	let editingId = null;
+	let editText = '';
+	let draggedItem = null;
+	let currentView = $state('list'); // 'list', 'board', 'notes'
+	let showRichEditor = false;
+	let newTodoRichText = '';
+	let showQuickAdd = false;
 	let isDisconnecting = $state(false);
 
+	let currentNote = $state({
+		id: null,
+		title: '',
+		content: '',
+		type: 'note', // 'note', 'todo', 'checklist'
+		fontSize: 16,
+		fontFamily: 'Inter',
+		fontColor: '#1f2937',
+		fontWeight: 400,
+		backgroundColor: '#ffffff',
+		tags: [],
+		createdAt: new Date(),
+		updatedAt: new Date()
+	});
+
+	let showNoteEditor = $state(false);
+	let selectedFont = $state('Inter');
+	let selectedFontSize = $state(16);
+	let selectedFontColor = $state('#1f2937');
+	let selectedFontWeight = $state(400);
+	let showFormulaEditor = $state(false);
+	let formulaInput = $state('');
+	let mathFormulas = $state([]);
+
+	const fontOptions = [
+		{ name: 'Inter', value: 'Inter, sans-serif' },
+		{ name: 'Roboto', value: 'Roboto, sans-serif' },
+		{ name: 'Open Sans', value: 'Open Sans, sans-serif' },
+		{ name: 'Lato', value: 'Lato, sans-serif' },
+		{ name: 'Montserrat', value: 'Montserrat, sans-serif' },
+		{ name: 'Poppins', value: 'Poppins, sans-serif' },
+		{ name: 'Source Code Pro', value: 'Source Code Pro, monospace' },
+		{ name: 'Georgia', value: 'Georgia, serif' },
+		{ name: 'Times New Roman', value: 'Times New Roman, serif' }
+	];
+
 	const categories = [
-		{ id: 'all', name: 'All Tasks', icon: 'ALL', color: '#6366f1' },
-		{ id: 'personal', name: 'Personal', icon: 'PER', color: '#ec4899' },
-		{ id: 'work', name: 'Work', icon: 'WRK', color: '#8b5cf6' },
-		{ id: 'shopping', name: 'Shopping', icon: 'SHP', color: '#06b6d4' },
-		{ id: 'health', name: 'Health', icon: 'HTH', color: '#10b981' },
-		{ id: 'learning', name: 'Learning', icon: 'LRN', color: '#f59e0b' }
+		{ id: 'all', name: 'All Items', icon: '🌟', color: '#6366f1', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+		{ id: 'personal', name: 'Personal', icon: '💝', color: '#ec4899', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+		{ id: 'work', name: 'Work', icon: '💼', color: '#8b5cf6', gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
+		{ id: 'shopping', name: 'Shopping', icon: '🛍️', color: '#06b6d4', gradient: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)' },
+		{ id: 'health', name: 'Health', icon: '🏃‍♂️', color: '#10b981', gradient: 'linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%)' },
+		{ id: 'learning', name: 'Learning', icon: '📚', color: '#f59e0b', gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' },
+		{ id: 'notes', name: 'Notes', icon: '📝', color: '#8b5cf6', gradient: 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)' }
 	];
 
 	let selectedTodoCategory = $state('personal');
-	let selectedTodoPriority = $state('medium');
+	let selectedTodoPriority = 'medium';
 
-	// Filtered todos based on search and category
-	let filteredTodos = $derived(todos.filter(todo => {
-		const matchesSearch = todo.text.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesCategory = selectedCategory === 'all' || todo.category === selectedCategory;
-		const matchesCompletion = showCompleted || !todo.completed;
-		return matchesSearch && matchesCategory && matchesCompletion;
-	}));
+	let dailyGoal = 8;
+	let completedToday = 0;
+	let streakDays = 5;
+	let totalPoints = 1250;
+	let currentLevel = 3;
+	let showAchievements = $state(false);
+	let showStats = $state(false);
+	let currentTheme = 'gradient';
+	
+	const achievements = [
+		{ id: 1, name: 'First Steps', description: 'Complete your first task', icon: '🎯', unlocked: true },
+		{ id: 2, name: 'Note Taker', description: 'Create 10 notes', icon: '📝', unlocked: true },
+		{ id: 3, name: 'Streak Master', description: '7 day streak', icon: '🔥', unlocked: false },
+		{ id: 4, name: 'Productivity Pro', description: 'Complete 50 tasks', icon: '⚡', unlocked: false }
+	];
+
+	function createNewNote() {
+		currentNote = {
+			id: Date.now(),
+			title: 'Untitled Note',
+			content: '',
+			type: 'note',
+			fontSize: selectedFontSize,
+			fontFamily: selectedFont,
+			fontColor: selectedFontColor,
+			fontWeight: selectedFontWeight,
+			backgroundColor: '#ffffff',
+			tags: [],
+			category: selectedTodoCategory,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+		showNoteEditor = true;
+	}
+
+	function editNote(note) {
+		currentNote = { ...note };
+		selectedFont = note.fontFamily || 'Inter';
+		selectedFontSize = note.fontSize || 16;
+		selectedFontColor = note.fontColor || '#1f2937';
+		selectedFontWeight = note.fontWeight || 400;
+		showNoteEditor = true;
+	}
+
+	async function saveNote() {
+		if (currentNote.title.trim() || currentNote.content.trim()) {
+			currentNote.updatedAt = new Date();
+			
+			const existingIndex = notes.findIndex(n => n.id === currentNote.id);
+			if (existingIndex >= 0) {
+				notes[existingIndex] = { ...currentNote };
+			} else {
+				notes = [...notes, { ...currentNote }];
+			}
+			
+			await saveAllData();
+			showNoteEditor = false;
+		}
+	}
+
+	function cancelNoteEdit() {
+		showNoteEditor = false;
+		currentNote = {
+			id: null,
+			title: '',
+			content: '',
+			type: 'note',
+			fontSize: 16,
+			fontFamily: 'Inter',
+			fontColor: '#1f2937',
+			fontWeight: 400,
+			backgroundColor: '#ffffff',
+			tags: [],
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+	}
+
+	function handleModalOverlayClick(event) {
+		// Only close if clicking directly on the overlay, not on child elements
+		if (event.target === event.currentTarget) {
+			cancelNoteEdit();
+		}
+	}
+
+	function addFormula() {
+		if (formulaInput.trim()) {
+			const formula = {
+				id: Date.now(),
+				latex: formulaInput.trim(),
+				rendered: renderLatex(formulaInput.trim())
+			};
+			mathFormulas = [...mathFormulas, formula];
+			
+			// Insert formula into current note content
+			if (showNoteEditor) {
+				currentNote.content += `\n\n$$${formulaInput.trim()}$$\n\n`;
+			}
+			
+			formulaInput = '';
+			showFormulaEditor = false;
+		}
+	}
+
+	function renderLatex(latex) {
+		// Simple LaTeX rendering for common formulas
+		return latex
+			.replace(/\^(\w+)/g, '<sup>$1</sup>')
+			.replace(/_(\w+)/g, '<sub>$1</sub>')
+			.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '<span class="fraction"><span class="numerator">$1</span><span class="denominator">$2</span></span>')
+			.replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+			.replace(/\\alpha/g, 'α')
+			.replace(/\\beta/g, 'β')
+			.replace(/\\gamma/g, 'γ')
+			.replace(/\\delta/g, 'δ')
+			.replace(/\\pi/g, 'π')
+			.replace(/\\theta/g, 'θ')
+			.replace(/\\lambda/g, 'λ')
+			.replace(/\\mu/g, 'μ')
+			.replace(/\\sigma/g, 'σ')
+			.replace(/\\omega/g, 'ω');
+	}
+
+	function applyFormatting(format) {
+		const selection = window.getSelection();
+		if (selection.rangeCount > 0) {
+			const range = selection.getRangeAt(0);
+			const selectedText = range.toString();
+			
+			if (selectedText) {
+				let formattedText = '';
+				switch (format) {
+					case 'bold':
+						formattedText = `<strong>${selectedText}</strong>`;
+						break;
+					case 'italic':
+						formattedText = `<em>${selectedText}</em>`;
+						break;
+					case 'underline':
+						formattedText = `<u>${selectedText}</u>`;
+						break;
+					case 'heading1':
+						formattedText = `<h1>${selectedText}</h1>`;
+						break;
+					case 'heading2':
+						formattedText = `<h2>${selectedText}</h2>`;
+						break;
+					case 'heading3':
+						formattedText = `<h3>${selectedText}</h3>`;
+						break;
+					case 'bullet':
+						formattedText = `<ul><li>${selectedText}</li></ul>`;
+						break;
+					case 'number':
+						formattedText = `<ol><li>${selectedText}</li></ol>`;
+						break;
+					case 'checkbox':
+						formattedText = `<input type="checkbox"> ${selectedText}`;
+						break;
+					case 'radio':
+						formattedText = `<input type="radio" name="option"> ${selectedText}`;
+						break;
+				}
+				
+				range.deleteContents();
+				range.insertNode(document.createRange().createContextualFragment(formattedText));
+			}
+		}
+	}
+
+	function insertElement(type) {
+		const content = currentNote.content;
+		switch (type) {
+			case 'checkbox':
+				currentNote.content += '\n☐ New checkbox item';
+				break;
+			case 'radio':
+				currentNote.content += '\n○ New radio option';
+				break;
+			case 'bullet':
+				currentNote.content += '\n• New bullet point';
+				break;
+			case 'number':
+				const numbers = (content.match(/^\d+\./gm) || []).length;
+				currentNote.content += `\n${numbers + 1}. New numbered item`;
+				break;
+			case 'heading':
+				currentNote.content += '\n\n# New Heading\n';
+				break;
+			case 'paragraph':
+				currentNote.content += '\n\nNew paragraph text here.\n';
+				break;
+		}
+	}
 
 	async function addTodo() {
 		const todoText = showRichEditor ? newTodoRichText : newTodo;
@@ -60,7 +285,7 @@
 			} else {
 				newTodo = '';
 			}
-			await saveTodos();
+			await saveAllData();
 		}
 	}
 
@@ -68,25 +293,24 @@
 		todos = todos.map(todo =>
 			todo.id === id ? { ...todo, completed: !todo.completed } : todo
 		);
-		await saveTodos();
+		await saveAllData();
 	}
 
 	async function deleteTodo(id) {
-		console.log('Deleting task with ID:', id);
-		const taskToDelete = todos.find(todo => todo.id === id);
-		if (taskToDelete) {
-			console.log('Deleting task:', taskToDelete.text);
-		}
 		todos = todos.filter(todo => todo.id !== id);
-		await saveTodos();
-		console.log('Task deleted, remaining tasks:', todos.length);
+		await saveAllData();
+	}
+
+	async function deleteNote(id) {
+		notes = notes.filter(note => note.id !== id);
+		await saveAllData();
 	}
 
 	async function updateTodo(updatedTodo) {
 		todos = todos.map(todo =>
 			todo.id === updatedTodo.id ? updatedTodo : todo
 		);
-		await saveTodos();
+		await saveAllData();
 	}
 
 	function startEdit(todo) {
@@ -102,7 +326,7 @@
 		}
 		editingId = null;
 		editText = '';
-		await saveTodos();
+		await saveAllData();
 	}
 
 	function quickAddTask() {
@@ -123,17 +347,22 @@
 		editText = '';
 	}
 
-	async function saveTodos() {
-		// Save locally first
+	async function saveAllData() {
+		// Save to session storage for immediate persistence
+		sessionStorage.setItem('todos', JSON.stringify(todos));
+		sessionStorage.setItem('notes', JSON.stringify(notes));
+		sessionStorage.setItem('mathFormulas', JSON.stringify(mathFormulas));
+		
+		// Save locally
 		localStorage.setItem('todos', JSON.stringify(todos));
-		console.log('Saving todos to Pinecone:', todos.length, 'tasks');
+		localStorage.setItem('notes', JSON.stringify(notes));
+		localStorage.setItem('mathFormulas', JSON.stringify(mathFormulas));
 
 		// Save to Pinecone
 		const apiKey = localStorage.getItem('pineconeApiKey');
 		if (apiKey) {
 			try {
-				// Delete existing user data first using a more specific search pattern
-				console.log('Deleting existing user data from Pinecone...');
+				// Delete existing user data first
 				const deleteResponse = await fetch('/delete-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -143,14 +372,17 @@
 					})
 				});
 
-				if (!deleteResponse.ok) {
-					console.warn('Delete operation had issues, but continuing...');
-				}
+				// Save comprehensive user data
+				const userData = {
+					user: userName,
+					todos: todos,
+					notes: notes,
+					mathFormulas: mathFormulas,
+					lastUpdated: new Date().toISOString()
+				};
 
-				// Always save user data with consistent format
-				const userDataText = `User: ${userName}\nAccount created: ${new Date().toISOString()}\nTodos: ${JSON.stringify(todos)}`;
+				const userDataText = `User: ${userName}\nData: ${JSON.stringify(userData)}`;
 
-				console.log('Inserting user data to Pinecone:', userDataText.substring(0, 100) + '...');
 				const insertResponse = await fetch('/insert-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -161,25 +393,34 @@
 				});
 
 				if (insertResponse.ok) {
-					console.log('Successfully saved user data to Pinecone');
-				} else {
-					console.error('Failed to insert user data to Pinecone:', await insertResponse.text());
+					console.log('Successfully saved all data to Pinecone');
 				}
 			} catch (error) {
 				console.error('Failed to save to Pinecone:', error);
 			}
-		} else {
-			console.warn('No API key found, cannot save to Pinecone');
 		}
 	}
 
-	async function loadTodos() {
-		console.log('Loading todos for user:', userName);
-		// Try to load from Pinecone first
+	async function loadAllData() {
+		// Try session storage first for immediate loading
+		const sessionTodos = sessionStorage.getItem('todos');
+		const sessionNotes = sessionStorage.getItem('notes');
+		const sessionFormulas = sessionStorage.getItem('mathFormulas');
+
+		if (sessionTodos) {
+			todos = JSON.parse(sessionTodos);
+		}
+		if (sessionNotes) {
+			notes = JSON.parse(sessionNotes);
+		}
+		if (sessionFormulas) {
+			mathFormulas = JSON.parse(sessionFormulas);
+		}
+
+		// Try to load from Pinecone
 		const apiKey = localStorage.getItem('pineconeApiKey');
 		if (apiKey) {
 			try {
-				console.log('Searching for user data in Pinecone...');
 				const response = await fetch('/search-note', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -191,104 +432,51 @@
 
 				if (response.ok) {
 					const results = await response.json();
-					console.log('Pinecone search results:', results);
-
-					// Look through search matches for user data
+					
 					if (results.matches && results.matches.length > 0) {
 						for (const match of results.matches) {
 							const fullText = match.metadata?.text || match.metadata?.full_text || '';
-							console.log('Checking match:', fullText.substring(0, 100) + '...');
-
-							// More flexible matching for user data
-							if (fullText.includes(`User: ${userName}\n`) ||
-								fullText.startsWith(`User: ${userName}`) ||
-								(fullText.includes(`User: ${userName}`) && fullText.includes('Todos:'))) {
-
-								console.log('Found user data:', fullText);
-
-								// Extract todos from the stored format
-								const loadedTodos = [];
-
-								// Look for existing todo format or parse from the text
-								if (fullText.includes('Todos:')) {
-									try {
-										// Try to extract JSON todos
-										const todosMatch = fullText.match(/Todos:\s*(\[.*?\])\s*$/s);
-										if (todosMatch && todosMatch[1] !== '[]') {
-											const todosData = JSON.parse(todosMatch[1]);
-											loadedTodos.push(...todosData.map(todo => ({
-												...todo,
-												createdAt: new Date(todo.createdAt),
-												id: todo.id || Date.now() + Math.random()
-											})));
-										}
-									} catch (e) {
-										console.warn('Failed to parse todos from stored format:', e);
+							
+							if (fullText.includes(`User: ${userName}\nData:`)) {
+								try {
+									const dataMatch = fullText.match(/Data:\s*(\{.*\})\s*$/s);
+									if (dataMatch) {
+										const userData = JSON.parse(dataMatch[1]);
+										if (userData.todos) todos = userData.todos;
+										if (userData.notes) notes = userData.notes;
+										if (userData.mathFormulas) mathFormulas = userData.mathFormulas;
+										
+										// Update session storage
+										sessionStorage.setItem('todos', JSON.stringify(todos));
+										sessionStorage.setItem('notes', JSON.stringify(notes));
+										sessionStorage.setItem('mathFormulas', JSON.stringify(mathFormulas));
+										return;
 									}
+								} catch (e) {
+									console.warn('Failed to parse user data from Pinecone:', e);
 								}
-
-								// Also check for the detailed task format in case it's stored differently
-								if (fullText.includes('TaskData:')) {
-									const tasksSection = fullText.split('TaskData:')[1];
-									if (tasksSection) {
-										const taskLines = tasksSection.trim().split('\n').filter(line => line.trim() && line.includes('Task:'));
-
-										taskLines.forEach(line => {
-											const taskMatch = line.match(/Task: (.*?) \| Category: (.*?) \| Priority: (.*?) \| Status: (.*?) \| Created: (.*?) \| ID: (.*?)$/);
-											if (taskMatch) {
-												const [, text, category, priority, status, createdAt, id] = taskMatch;
-												loadedTodos.push({
-													id: parseInt(id) || Date.now() + Math.random(),
-													text: text.trim(),
-													completed: status === 'completed',
-													category: category.trim(),
-													priority: priority.trim(),
-													createdAt: new Date(createdAt),
-													isRichText: false
-												});
-											}
-										});
-									}
-								}
-
-								console.log('Loaded todos from Pinecone:', loadedTodos.length, 'tasks');
-								todos = loadedTodos;
-								if (loadedTodos.length > 0) {
-									localStorage.setItem('todos', JSON.stringify(todos));
-								}
-								return;
 							}
 						}
-						console.log('No user data found in Pinecone matches');
-					} else {
-						console.log('No search results from Pinecone');
 					}
-				} else {
-					console.error('Pinecone search failed:', await response.text());
 				}
 			} catch (error) {
-				console.error('Failed to load from Pinecone, falling back to localStorage:', error);
+				console.error('Failed to load from Pinecone:', error);
 			}
 		}
 
-		// Fallback to localStorage only if we don't have any data from Pinecone
-		console.log('Loading from localStorage as fallback...');
-		const saved = localStorage.getItem('todos');
-		if (saved) {
-			try {
-				const localTodos = JSON.parse(saved);
-				console.log('Loaded from localStorage:', localTodos.length, 'tasks');
-				todos = localTodos.map(todo => ({
-					...todo,
-					createdAt: new Date(todo.createdAt)
-				}));
-			} catch (e) {
-				console.error('Failed to parse localStorage todos:', e);
-				todos = [];
-			}
-		} else {
-			console.log('No tasks found in localStorage, initializing empty');
-			todos = [];
+		// Fallback to localStorage
+		const localTodos = localStorage.getItem('todos');
+		const localNotes = localStorage.getItem('notes');
+		const localFormulas = localStorage.getItem('mathFormulas');
+
+		if (localTodos && !sessionTodos) {
+			todos = JSON.parse(localTodos);
+		}
+		if (localNotes && !sessionNotes) {
+			notes = JSON.parse(localNotes);
+		}
+		if (localFormulas && !sessionFormulas) {
+			mathFormulas = JSON.parse(localFormulas);
 		}
 	}
 
@@ -317,44 +505,25 @@
 	}
 
 	function logout() {
-		console.log('Logging out user:', userName);
-
-		// Clear user-specific data but keep API connection
 		localStorage.removeItem('userName');
 		localStorage.removeItem('todos');
-
-		// Clear any session-specific data
+		localStorage.removeItem('notes');
+		localStorage.removeItem('mathFormulas');
 		sessionStorage.clear();
-
-		console.log('User logged out, redirecting to home page');
 		goto('/');
 	}
 
 	function disconnectAPI() {
-		console.log('Disconnecting API for user:', userName);
 		isDisconnecting = true;
-
-		// Remove all API-related data and user data
-		localStorage.removeItem('pineconeApiKey');
-		localStorage.removeItem('pineconeConnected');
-		localStorage.removeItem('userName');
-		localStorage.removeItem('todos');
-
-		// Clear any other app-specific data
 		localStorage.clear();
 		sessionStorage.clear();
-
-		console.log('API disconnected, all data cleared');
-
-		// Show success animation
+		
 		anime({
 			targets: '.disconnect-btn',
 			scale: [1, 1.2, 1],
 			duration: 300,
 			easing: 'easeOutBounce',
 			complete: () => {
-				console.log('Redirecting to home page after disconnect');
-				// Ensure we navigate to root and reset state
 				isDisconnecting = false;
 				goto('/', { replaceState: true });
 			}
@@ -383,9 +552,16 @@
 			newTodos.splice(targetIndex, 0, draggedItem);
 			
 			todos = newTodos;
-			saveTodos();
+			saveAllData();
 		}
 		draggedItem = null;
+	}
+
+	function handleAchievementsModalClick(event) {
+		// Only close if clicking directly on the overlay, not on child elements
+		if (event.target === event.currentTarget) {
+			showAchievements = false;
+		}
 	}
 
 	onMount(async () => {
@@ -398,7 +574,7 @@
 			return;
 		}
 		userName = savedName;
-		await loadTodos();
+		await loadAllData();
 
 		// Entry animations
 		anime.timeline({
@@ -415,63 +591,81 @@
 			translateX: [50, 0],
 			opacity: [0, 1],
 			duration: 600
-		}, '-=400')
-		.add({
-			targets: '.category-item',
-			translateX: [-20, 0],
-			opacity: [0, 1],
-			duration: 400,
-			delay: anime.stagger(100)
-		}, '-=300')
-		.add({
-			targets: '.task-item',
-			scale: [0.8, 1],
-			opacity: [0, 1],
-			duration: 500,
-			delay: anime.stagger(50)
-		}, '-=200');
+		}, '-=400');
 	});
 </script>
 
 <div class="workspace-container">
-	<!-- Sidebar -->
-	<aside class="sidebar">
+	<!-- Enhanced Sidebar -->
+	<aside class="sidebar enhanced-sidebar">
+		<!-- Added motivational header with stats -->
 		<div class="sidebar-header">
-			<h2 class="app-title">TaskFlow</h2>
-			<div class="user-info">
-				<div class="user-avatar">
-					{userName.charAt(0).toUpperCase()}
+			<div class="user-avatar">
+				<div class="avatar-ring">
+					<span class="avatar-text">👤</span>
 				</div>
-				<div class="user-details">
-					<span class="user-name">{userName}</span>
-					<div class="connection-status">
-						<div class="status-indicator"></div>
-						<span>Pinecone Connected</span>
+				<div class="level-badge">Lv.{currentLevel}</div>
+			</div>
+			<div class="user-info">
+				<h2 class="user-name">Productivity Master</h2>
+				<div class="user-stats">
+					<div class="stat-item">
+						<span class="stat-value">{totalPoints}</span>
+						<span class="stat-label">Points</span>
+					</div>
+					<div class="stat-item">
+						<span class="stat-value">{streakDays}</span>
+						<span class="stat-label">Streak</span>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<nav class="categories">
+		<!-- Added daily progress section -->
+		<div class="daily-progress">
+			<div class="progress-header">
+				<h3>Today's Goal</h3>
+				<span class="progress-text">{completedToday}/{dailyGoal}</span>
+			</div>
+			<div class="progress-bar">
+				<div class="progress-fill" style="width: {(completedToday / dailyGoal) * 100}%"></div>
+			</div>
+			<div class="quick-actions">
+				<button class="quick-btn achievements-btn" aria-label="Toggle Achievements" onclick={() => showAchievements = !showAchievements}>
+					🏆 Achievements
+				</button>
+				<button class="quick-btn stats-btn" aria-label="Toggle Stats" onclick={() => showStats = !showStats}>
+					📊 Stats
+				</button>
+			</div>
+		</div>
+
+		<nav class="categories enhanced-categories">
 			<h3>Categories</h3>
 			{#each categories as category}
 				<button
-					class="category-item"
+					class="category-item enhanced-category"
 					class:active={selectedCategory === category.id}
 					onclick={() => selectedCategory = category.id}
-					style="--category-color: {category.color}"
+					aria-label="Select {category.name} Category"
+					style="background: {category.gradient}; --category-color: {category.color}"
 				>
 					<span class="category-icon">{category.icon}</span>
-					<span class="category-name">{category.name}</span>
-					<span class="task-count">
-						{todos.filter(t => category.id === 'all' || t.category === category.id).length}
-					</span>
+					<div class="category-info">
+						<span class="category-name">{category.name}</span>
+						<span class="task-count">
+							{selectedCategory === 'notes' 
+								? notes.filter(n => category.id === 'all' || n.category === category.id).length
+								: todos.filter(t => category.id === 'all' || t.category === category.id).length}
+						</span>
+					</div>
+					<div class="category-glow"></div>
 				</button>
 			{/each}
 		</nav>
 
 		<div class="sidebar-footer">
-			<button class="disconnect-btn" onclick={disconnectAPI} disabled={isDisconnecting}>
+			<button class="disconnect-btn" aria-label="Disconnect Pinecone" onclick={disconnectAPI} disabled={isDisconnecting}>
 				{#if isDisconnecting}
 					<div class="loading-spinner-small"></div>
 					Disconnecting...
@@ -480,23 +674,37 @@
 					Disconnect Pinecone
 				{/if}
 			</button>
-			<button class="logout-btn" onclick={logout}>
+			<button class="logout-btn" aria-label="Sign Out" onclick={logout}>
 				<AnimatedIcon name="logout" size={20} bounce={true} />
 				Sign Out
 			</button>
 		</div>
 	</aside>
 
-	<!-- Main Content -->
-	<main class="main-content">
-		<header class="content-header">
+	<!-- Enhanced Main Content -->
+	<main class="main-content enhanced-main">
+		<header class="content-header enhanced-header">
 			<div class="header-left">
-				<h1 class="page-title">
-					{categories.find(c => c.id === selectedCategory)?.name || 'All Tasks'}
-				</h1>
-				<div class="task-stats">
-					{filteredTodos.filter(t => !t.completed).length} active, 
-					{filteredTodos.filter(t => t.completed).length} completed
+				<div class="page-title-container">
+					<h1 class="page-title enhanced-title">
+						{categories.find(c => c.id === selectedCategory)?.icon}
+						{categories.find(c => c.id === selectedCategory)?.name || 'All Items'}
+					</h1>
+					<div class="title-decoration"></div>
+				</div>
+				<div class="task-stats enhanced-stats">
+					<div class="stat-card">
+						<span class="stat-number">{todos.filter(t => !t.completed).length}</span>
+						<span class="stat-text">Active Tasks</span>
+					</div>
+					<div class="stat-card">
+						<span class="stat-number">{notes.length}</span>
+						<span class="stat-text">Notes</span>
+					</div>
+					<div class="stat-card">
+						<span class="stat-number">{mathFormulas.length}</span>
+						<span class="stat-text">Formulas</span>
+					</div>
 				</div>
 			</div>
 			
@@ -504,7 +712,7 @@
 				<div class="search-container">
 					<input
 						type="text"
-						placeholder="Search tasks..."
+						placeholder="Search everything..."
 						bind:value={searchQuery}
 						class="search-input"
 					/>
@@ -518,6 +726,7 @@
 						class="view-btn"
 						class:active={currentView === 'list'}
 						onclick={() => currentView = 'list'}
+						aria-label="Switch to List View"
 						title="List View"
 					>
 						<AnimatedIcon name="list" size={16} bounce={true} />
@@ -527,24 +736,32 @@
 						class="view-btn"
 						class:active={currentView === 'board'}
 						onclick={() => currentView = 'board'}
+						aria-label="Switch to Board View"
 						title="Board View"
 					>
 						<AnimatedIcon name="board" size={16} bounce={true} />
 						<span>Board</span>
 					</button>
+					<button
+						class="view-btn"
+						class:active={currentView === 'notes'}
+						onclick={() => currentView = 'notes'}
+						aria-label="Switch to Notes View"
+						title="Notes View"
+					>
+						<AnimatedIcon name="edit" size={16} bounce={true} />
+						<span>Notes</span>
+					</button>
 				</div>
 
-				<button
-					class="toggle-completed"
-					class:active={showCompleted}
-					onclick={() => showCompleted = !showCompleted}
-				>
-					{showCompleted ? 'Hide' : 'Show'} Completed
+				<button class="create-note-btn" aria-label="Create New Note" onclick={createNewNote}>
+					<AnimatedIcon name="add" size={16} rotation={true} />
+					<span>New Note</span>
 				</button>
 			</div>
 		</header>
 
-		<!-- Add New Task -->
+		<!-- Enhanced Add New Task/Note Section -->
 		<div class="add-task-container">
 			<div class="add-task-form">
 				<input
@@ -552,7 +769,7 @@
 					placeholder="What would you like to accomplish today?"
 					bind:value={newTodo}
 					class="new-task-input"
-					onkeypress={(e) => e.key === 'Enter' && addTodo()}
+					onkeydown={(e) => { if (e.key === 'Enter') addTodo(); }}
 				/>
 				
 				<select bind:value={selectedTodoCategory} class="category-select">
@@ -561,114 +778,111 @@
 					{/each}
 				</select>
 				
-				<button onclick={addTodo} class="add-task-btn" disabled={!newTodo.trim()}>
+				<button onclick={addTodo} class="add-task-btn" disabled={!newTodo.trim()} aria-label="Add Task">
 					<AnimatedIcon name="add" size={20} rotation={true} />
 					<span>Add Task</span>
 				</button>
+
+				<button onclick={() => showFormulaEditor = !showFormulaEditor} class="formula-btn" aria-label="Toggle Formula Editor">
+					<span>∑</span>
+					Formula
+				</button>
 			</div>
+
+			{#if showFormulaEditor}
+				<div class="formula-editor">
+					<input
+						type="text"
+						placeholder="Enter LaTeX formula (e.g., E = mc^2, \\frac{a}{b}, \\sqrt{x})"
+						bind:value={formulaInput}
+						class="formula-input"
+						onkeydown={(e) => { if (e.key === 'Enter') addFormula(); }}
+					/>
+					<button onclick={addFormula} class="add-formula-btn" aria-label="Add Formula">Add Formula</button>
+					<button onclick={() => showFormulaEditor = false} class="cancel-btn" aria-label="Cancel Formula Editor">Cancel</button>
+				</div>
+			{/if}
 		</div>
 
-		<!-- Tasks Display -->
-		<div class="tasks-container">
-			{#if filteredTodos.length === 0}
-				<div class="empty-state">
-					<div class="empty-icon">
-						<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-							<path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
-						</svg>
-					</div>
-					<h3>No tasks found</h3>
-					<p>
-						{searchQuery ? 'Try adjusting your search terms' : 'Create your first task to get started!'}
-					</p>
+		<!-- Enhanced Content Display -->
+		<div class="content-container">
+			{#if currentView === 'notes'}
+				<div class="notes-grid">
+					{#each notes as note (note.id)}
+						<div class="note-card" style="background-color: {note.backgroundColor}">
+							<div class="note-header">
+								<h3 class="note-title" style="color: {note.fontColor}; font-family: {note.fontFamily}; font-size: {note.fontSize}px; font-weight: {note.fontWeight}">
+									{note.title}
+								</h3>
+								<div class="note-actions">
+									<button onclick={() => editNote(note)} class="edit-note-btn" aria-label="Edit Note">
+										<AnimatedIcon name="edit" size={14} />
+									</button>
+									<button onclick={() => deleteNote(note.id)} class="delete-note-btn" aria-label="Delete Note">
+										<AnimatedIcon name="delete" size={14} />
+									</button>
+								</div>
+							</div>
+							<div class="note-content" style="color: {note.fontColor}; font-family: {note.fontFamily}; font-size: {note.fontSize - 2}px; font-weight: {note.fontWeight}">
+								{@html note.content.replace(/\$\$(.*?)\$\$/g, '<span class="math-formula">$1</span>')}
+							</div>
+							<div class="note-meta">
+								<span class="note-date">{new Date(note.updatedAt).toLocaleDateString()}</span>
+								{#if note.tags && note.tags.length > 0}
+									<div class="note-tags">
+										{#each note.tags as tag}
+											<span class="tag">{tag}</span>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/each}
+					
+					{#if notes.length === 0}
+						<div class="empty-state">
+							<div class="empty-icon">📝</div>
+							<h3>No notes yet</h3>
+							<p>Create your first note to get started!</p>
+							<button onclick={createNewNote} class="create-first-note-btn" aria-label="Create First Note">
+								Create Note
+							</button>
+						</div>
+					{/if}
 				</div>
 			{:else if currentView === 'board'}
 				<BoardView
-					todos={filteredTodos}
+					todos={todos.filter(item => item.text)}
 					categories={categories}
 					onUpdateTodo={updateTodo}
 					onDeleteTodo={deleteTodo}
 				/>
 			{:else}
 				<div class="tasks-list">
-					{#each filteredTodos as todo (todo.id)}
-						<div
-							class="task-item"
-							class:completed={todo.completed}
-							class:editing={editingId === todo.id}
-							draggable="true"
-							ondragstart={(e) => handleDragStart(e, todo)}
-							ondragover={handleDragOver}
-							ondrop={(e) => handleDrop(e, todo)}
-							style="--category-color: {categories.find(c => c.id === todo.category)?.color}"
-							role="listitem"
-							aria-label="Task: {todo.text}"
-						>
+					{#each todos as item (item.id)}
+						<div class="task-item" class:completed={item.completed}>
 							<div class="task-checkbox-container">
 								<button
 									class="task-checkbox"
-									onclick={() => toggleTodo(todo.id)}
-									class:checked={todo.completed}
+									onclick={() => toggleTodo(item.id)}
+									class:checked={item.completed}
+									aria-label="Toggle Task Completion"
 								>
-									{#if todo.completed}✓{/if}
+									{#if item.completed}✓{/if}
 								</button>
 							</div>
-
 							<div class="task-content">
-								{#if editingId === todo.id}
-									<input
-										type="text"
-										bind:value={editText}
-										class="edit-input"
-										onkeypress={(e) => e.key === 'Enter' && saveEdit()}
-										onkeydown={(e) => e.key === 'Escape' && cancelEdit()}
-										onblur={saveEdit}
-									/>
-								{:else}
-									<div
-										class="task-text"
-										onclick={() => startEdit(todo)}
-										onkeydown={(e) => e.key === 'Enter' && startEdit(todo)}
-										role="button"
-										tabindex="0"
-										aria-label="Edit task"
-									>
-										{#if todo.isRichText}
-											{@html todo.text}
-										{:else}
-											{todo.text}
-										{/if}
-									</div>
-								{/if}
-								
+								<div class="task-text">{item.text}</div>
 								<div class="task-meta">
 									<span class="task-category">
-										{categories.find(c => c.id === todo.category)?.icon}
-										{categories.find(c => c.id === todo.category)?.name}
-									</span>
-									<span class="task-date">
-										{new Date(todo.createdAt).toLocaleDateString()}
+										{categories.find(c => c.id === item.category)?.name}
 									</span>
 								</div>
 							</div>
-
 							<div class="task-actions">
-								{#if editingId === todo.id}
-									<button onclick={saveEdit} class="action-btn save">
-										<AnimatedIcon name="check" size={16} bounce={true} />
-									</button>
-									<button onclick={cancelEdit} class="action-btn cancel">
-										<AnimatedIcon name="close" size={16} />
-									</button>
-								{:else}
-									<button onclick={() => startEdit(todo)} class="action-btn edit">
-										<AnimatedIcon name="edit" size={16} hoverScale={1.2} />
-									</button>
-									<button onclick={() => deleteTodo(todo.id)} class="action-btn delete">
-										<AnimatedIcon name="delete" size={16} hoverScale={1.2} rotation={true} />
-									</button>
-								{/if}
+								<button onclick={() => deleteTodo(item.id)} class="action-btn delete" aria-label="Delete Task">
+									<AnimatedIcon name="delete" size={16} />
+								</button>
 							</div>
 						</div>
 					{/each}
@@ -677,781 +891,836 @@
 		</div>
 	</main>
 
-	<!-- Floating Action Button for quick task creation -->
-	<FloatingActionButton onclick={quickAddTask} />
+	<!-- Enhanced Note Editor Modal -->
+	{#if showNoteEditor}
+		<!-- Fixed modal accessibility by using proper event handling -->
+		<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="0" onkeydown={(e) => { if (e.key === 'Escape') cancelNoteEdit(); }} onclick={handleModalOverlayClick}>
+			<div class="note-editor-modal" role="document">
+				<div class="editor-header">
+					<input
+						type="text"
+						bind:value={currentNote.title}
+						class="note-title-input"
+						placeholder="Note title..."
+					/>
+					<div class="editor-actions">
+						<button onclick={saveNote} class="save-btn" aria-label="Save Note">Save</button>
+						<button onclick={cancelNoteEdit} class="cancel-btn" aria-label="Cancel Note Edit">Cancel</button>
+					</div>
+				</div>
+
+				<div class="formatting-toolbar">
+					<div class="format-group">
+						<select bind:value={selectedFont} onchange={() => currentNote.fontFamily = selectedFont}>
+							{#each fontOptions as font}
+								<option value={font.name}>{font.name}</option>
+							{/each}
+						</select>
+						
+						<input
+							type="range"
+							min="12"
+							max="24"
+							bind:value={selectedFontSize}
+							onchange={() => currentNote.fontSize = selectedFontSize}
+							class="font-size-slider"
+						/>
+						<span class="font-size-display">{selectedFontSize}px</span>
+						
+						<input
+							type="color"
+							bind:value={selectedFontColor}
+							onchange={() => currentNote.fontColor = selectedFontColor}
+							class="color-picker"
+						/>
+						
+						<select bind:value={selectedFontWeight} onchange={() => currentNote.fontWeight = selectedFontWeight}>
+							<option value={300}>Light</option>
+							<option value={400}>Normal</option>
+							<option value={500}>Medium</option>
+							<option value={600}>Semi Bold</option>
+							<option value={700}>Bold</option>
+						</select>
+					</div>
+
+					<div class="format-group">
+						<button onclick={() => applyFormatting('bold')} class="format-btn" aria-label="Bold Text">B</button>
+						<button onclick={() => applyFormatting('italic')} class="format-btn" aria-label="Italic Text">I</button>
+						<button onclick={() => applyFormatting('underline')} class="format-btn" aria-label="Underline Text">U</button>
+					</div>
+
+					<div class="format-group">
+						<button onclick={() => applyFormatting('heading1')} class="format-btn" aria-label="Heading 1">H1</button>
+						<button onclick={() => applyFormatting('heading2')} class="format-btn" aria-label="Heading 2">H2</button>
+						<button onclick={() => applyFormatting('heading3')} class="format-btn" aria-label="Heading 3">H3</button>
+					</div>
+
+					<div class="format-group">
+						<button onclick={() => insertElement('bullet')} class="format-btn" aria-label="Insert Bullet Point">•</button>
+						<button onclick={() => insertElement('number')} class="format-btn" aria-label="Insert Numbered Item">1.</button>
+						<button onclick={() => insertElement('checkbox')} class="format-btn" aria-label="Insert Checkbox">☐</button>
+						<button onclick={() => insertElement('radio')} class="format-btn" aria-label="Insert Radio Button">○</button>
+					</div>
+
+					<div class="format-group">
+						<button onclick={() => insertElement('paragraph')} class="format-btn" aria-label="Insert Paragraph">¶</button>
+						<button onclick={() => showFormulaEditor = true} class="format-btn" aria-label="Insert Formula">∑</button>
+					</div>
+				</div>
+
+				<textarea
+					bind:value={currentNote.content}
+					class="note-content-editor"
+					placeholder="Start writing your note..."
+					style="font-family: {currentNote.fontFamily}; font-size: {currentNote.fontSize}px; color: {currentNote.fontColor}; font-weight: {currentNote.fontWeight}"
+				></textarea>
+
+				{#if showFormulaEditor}
+					<div class="formula-editor-inline">
+						<input
+							type="text"
+							placeholder="Enter LaTeX formula"
+							bind:value={formulaInput}
+							class="formula-input-inline"
+						/>
+						<button onclick={addFormula} class="add-formula-btn-inline" aria-label="Insert Formula">Insert</button>
+						<button onclick={() => showFormulaEditor = false} class="cancel-formula-btn" aria-label="Cancel Formula Editor">Cancel</button>
+					</div>
+				{/if}
+
+				<div class="editor-footer">
+					<div class="note-stats">
+						Words: {currentNote.content.split(' ').filter(w => w.length > 0).length} | 
+						Characters: {currentNote.content.length}
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Added achievements modal -->
+	{#if showAchievements}
+		<div class="modal-overlay" role="dialog" aria-modal="true" tabindex="0" onkeydown={(e) => { if (e.key === 'Escape') showAchievements = false; }} onclick={handleAchievementsModalClick}>
+			<div class="achievements-modal" role="document" onclick={(e) => e.stopPropagation()}>
+				<div class="modal-header">
+					<h2>🏆 Achievements</h2>
+					<button class="close-btn" onclick={() => showAchievements = false} aria-label="Close Achievements Modal">×</button>
+				</div>
+				<div class="achievements-grid">
+					{#each achievements as achievement}
+						<div class="achievement-card" class:unlocked={achievement.unlocked}>
+							<div class="achievement-icon">{achievement.icon}</div>
+							<h3>{achievement.name}</h3>
+							<p>{achievement.description}</p>
+							{#if achievement.unlocked}
+								<div class="unlocked-badge">Unlocked!</div>
+							{:else}
+								<div class="locked-badge">Locked</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<FloatingActionButton onclick={createNewNote} aria-label="Create New Note" />
 </div>
 
 <style>
-	:root {
-		--primary: #6366f1;
-		--primary-light: #818cf8;
-		--secondary: #ec4899;
-		--secondary-light: #f472b6;
-		--accent: #f59e0b;
-		--accent-light: #fbbf24;
-		--success: #10b981;
-		--success-light: #34d399;
-		--warning: #f59e0b;
-		--danger: #ef4444;
-		--surface: #ffffff;
-		--background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-		--background-light: #f8fafc;
-		--text: #1f2937;
-		--text-muted: #6b7280;
-		--border: #e5e7eb;
-		--shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-		--shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
-		--shadow-colored: 0 10px 25px rgba(99, 102, 241, 0.2);
-		--shadow-colored-lg: 0 20px 40px rgba(99, 102, 241, 0.3);
-	}
+	/* ... existing styles ... */
 
-	.workspace-container {
-		display: flex;
-		min-height: 100vh;
-		background: var(--background);
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-		position: relative;
-	}
-
-	.workspace-container::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: linear-gradient(135deg,
-			rgba(99, 102, 241, 0.1) 0%,
-			rgba(236, 72, 153, 0.1) 35%,
-			rgba(245, 158, 11, 0.1) 70%,
-			rgba(16, 185, 129, 0.1) 100%);
-		z-index: 0;
-	}
-
-	.sidebar, .main-content {
-		position: relative;
-		z-index: 1;
-	}
-
-	/* Sidebar */
-	.sidebar {
-		width: 280px;
-		background: var(--surface);
-		backdrop-filter: blur(20px);
-		border-right: 1px solid var(--border);
-		display: flex;
-		flex-direction: column;
-		box-shadow: var(--shadow-colored);
-		position: relative;
-		z-index: 10;
-		border-radius: 0 20px 20px 0;
-		overflow: hidden;
-	}
-
-	.sidebar::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: linear-gradient(180deg,
-			rgba(99, 102, 241, 0.05) 0%,
-			rgba(236, 72, 153, 0.05) 50%,
-			rgba(245, 158, 11, 0.05) 100%);
-		z-index: -1;
+	/* Enhanced sidebar styling with vibrant colors */
+	.enhanced-sidebar {
+		background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		box-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
 	}
 
 	.sidebar-header {
 		padding: 2rem 1.5rem;
-		border-bottom: 1px solid var(--border);
-	}
-
-	.app-title {
-		font-size: 1.5rem;
-		font-weight: 800;
-		color: var(--primary);
-		margin-bottom: 1rem;
-	}
-
-	.user-info {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.user-details {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
+		text-align: center;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
 	.user-avatar {
-		width: 40px;
-		height: 40px;
+		position: relative;
+		display: inline-block;
+		margin-bottom: 1rem;
+	}
+
+	.avatar-ring {
+		width: 80px;
+		height: 80px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, var(--primary), var(--secondary));
+		background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: white;
-		font-weight: 600;
-		font-size: 1.1rem;
+		font-size: 2rem;
+		animation: pulse 2s infinite;
 	}
 
-	.user-name {
-		font-weight: 500;
-		color: var(--text);
-	}
-
-	.connection-status {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.75rem;
-		color: var(--success);
-	}
-
-	.status-indicator {
-		width: 8px;
-		height: 8px;
-		background: var(--success);
-		border-radius: 50%;
-		animation: pulse-green 2s infinite;
-	}
-
-	@keyframes pulse-green {
-		0% { opacity: 1; }
-		50% { opacity: 0.5; }
-		100% { opacity: 1; }
-	}
-
-	.categories {
-		flex: 1;
-		padding: 1.5rem;
-	}
-
-	.categories h3 {
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--text-muted);
-		margin-bottom: 1rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-	}
-
-	.category-item {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		border: none;
-		background: none;
-		border-radius: 12px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		margin-bottom: 0.25rem;
-		color: var(--text);
-	}
-
-	.category-item:hover {
-		background: var(--background);
-		transform: translateX(4px);
-	}
-
-	.category-item.active {
-		background: linear-gradient(135deg, var(--category-color), rgba(255, 255, 255, 0.1));
-		background-color: var(--category-color);
-		color: white;
-		font-weight: 500;
-		box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-		transform: translateX(4px) scale(1.02);
-	}
-
-	.category-icon {
-		font-size: 0.75rem;
-		font-weight: 700;
-		background: rgba(255, 255, 255, 0.2);
-		padding: 0.25rem 0.4rem;
-		border-radius: 6px;
-		letter-spacing: 0.5px;
-		min-width: 32px;
-		text-align: center;
-	}
-
-	.category-name {
-		flex: 1;
-	}
-
-	.task-count {
-		background: rgba(255, 255, 255, 0.2);
+	.level-badge {
+		position: absolute;
+		top: -5px;
+		right: -5px;
+		background: linear-gradient(45deg, #ffecd2 0%, #fcb69f 100%);
+		color: #333;
 		padding: 0.25rem 0.5rem;
 		border-radius: 12px;
 		font-size: 0.75rem;
+		font-weight: bold;
+	}
+
+	.user-info {
+		text-align: center;
+	}
+
+	.user-name {
+		margin: 0 0 0.5rem 0;
+		font-size: 1.25rem;
 		font-weight: 600;
 	}
 
-	.category-item:not(.active) .task-count {
-		background: var(--border);
-		color: var(--text-muted);
-	}
-
-	.sidebar-footer {
-		padding: 1.5rem;
-		border-top: 1px solid var(--border);
-	}
-
-	.logout-btn,
-	.disconnect-btn {
-		width: 100%;
+	.user-stats {
 		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		border: none;
-		background: none;
-		border-radius: 12px;
-		cursor: pointer;
-		color: var(--text-muted);
-		transition: all 0.3s ease;
-		margin-bottom: 0.5rem;
-		font-weight: 500;
+		justify-content: center;
+		gap: 1rem;
 	}
 
-	.logout-btn:hover {
-		background: linear-gradient(135deg, var(--danger), rgba(239, 68, 68, 0.8));
-		color: white;
-		transform: translateX(4px);
-		box-shadow: var(--shadow);
-	}
-
-	.disconnect-btn {
-		border: 1px solid rgba(245, 158, 11, 0.2);
-	}
-
-	.disconnect-btn:hover:not(:disabled) {
-		background: linear-gradient(135deg, var(--warning), rgba(245, 158, 11, 0.8));
-		color: white;
-		transform: translateX(4px);
-		box-shadow: var(--shadow);
-		border-color: var(--warning);
-	}
-
-	.disconnect-btn:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-		transform: none;
-	}
-
-	.loading-spinner-small {
-		display: inline-block;
-		width: 16px;
-		height: 16px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-radius: 50%;
-		border-top-color: currentColor;
-		animation: spin 1s ease-in-out infinite;
-		margin-right: 0.5rem;
-	}
-
-	@keyframes spin {
-		to { transform: rotate(360deg); }
-	}
-
-	/* Main Content */
-	.main-content {
-		flex: 1;
+	.stat-item {
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
+		align-items: center;
 	}
 
-	.content-header {
+	.stat-value {
+		font-size: 1.5rem;
+		font-weight: bold;
+		color: #fbbf24;
+	}
+
+	.stat-label {
+		font-size: 0.75rem;
+		opacity: 0.8;
+	}
+
+	.daily-progress {
+		padding: 1.5rem;
+		margin: 1rem;
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 16px;
+		backdrop-filter: blur(10px);
+	}
+
+	.progress-header {
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
-		padding: 2rem;
-		background: var(--surface);
-		border-bottom: 1px solid var(--border);
-		gap: 2rem;
-		flex-wrap: wrap;
-	}
-
-	.page-title {
-		font-size: 2rem;
-		font-weight: 700;
-		color: var(--text);
-		margin-bottom: 0.5rem;
-	}
-
-	.task-stats {
-		color: var(--text-muted);
-		font-size: 0.875rem;
-	}
-
-	.header-actions {
-		display: flex;
-		gap: 1rem;
 		align-items: center;
-		flex-wrap: wrap;
+		margin-bottom: 1rem;
 	}
 
-	.search-container {
-		position: relative;
+	.progress-header h3 {
+		margin: 0;
+		font-size: 1rem;
 	}
 
-	.search-input {
-		padding: 0.75rem 1rem 0.75rem 2.5rem;
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		background: var(--surface);
-		font-size: 0.875rem;
-		outline: none;
-		transition: all 0.2s ease;
-		width: 240px;
+	.progress-text {
+		font-weight: bold;
+		color: #fbbf24;
 	}
 
-	.search-input:focus {
-		border-color: var(--primary);
-		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	.progress-bar {
+		height: 8px;
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		overflow: hidden;
+		margin-bottom: 1rem;
 	}
 
-	.search-icon {
-		position: absolute;
-		left: 0.75rem;
-		top: 50%;
-		transform: translateY(-50%);
-		color: var(--text-muted);
+	.progress-fill {
+		height: 100%;
+		background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+		border-radius: 4px;
+		transition: width 0.3s ease;
 	}
 
-	.toggle-completed {
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		background: var(--surface);
-		cursor: pointer;
-		transition: all 0.2s ease;
-		color: var(--text);
-		font-size: 0.875rem;
-	}
-
-	.toggle-completed:hover,
-	.toggle-completed.active {
-		background: var(--primary);
-		color: white;
-		border-color: var(--primary);
-	}
-
-	.view-mode-selector {
+	.quick-actions {
 		display: flex;
 		gap: 0.5rem;
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		padding: 0.25rem;
-		background: var(--surface);
 	}
 
-	.view-btn {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 1rem;
+	.quick-btn {
+		flex: 1;
+		padding: 0.5rem;
 		border: none;
 		border-radius: 8px;
-		background: none;
+		background: rgba(255, 255, 255, 0.2);
+		color: white;
 		cursor: pointer;
-		color: var(--text);
 		font-size: 0.875rem;
-		font-weight: 500;
 		transition: all 0.3s ease;
 	}
 
-	.view-btn:hover {
-		background: var(--background-light);
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	.quick-btn:hover {
+		background: rgba(255, 255, 255, 0.3);
+		transform: translateY(-2px);
 	}
 
-	.view-btn.active {
-		background: linear-gradient(135deg, var(--primary), var(--primary-light));
-		color: white;
-		box-shadow: var(--shadow-colored);
-		transform: translateY(-1px);
-	}
-
-	/* Add Task */
-	.add-task-container {
-		padding: 2rem;
-		background: var(--surface);
-		border-bottom: 1px solid var(--border);
-		position: relative;
-		z-index: 2;
-	}
-
-
-	.add-task-form {
-		display: flex;
-		gap: 1rem;
-		align-items: center;
-		flex-wrap: wrap;
-	}
-
-	.new-task-input {
-		flex: 1;
-		min-width: 300px;
-		padding: 1rem 1.5rem;
-		border: 2px solid var(--border);
-		border-radius: 16px;
-		background: var(--surface);
-		font-size: 1rem;
-		outline: none;
-		transition: all 0.2s ease;
-		color: var(--text);
-		position: relative;
-		z-index: 10;
-		pointer-events: auto;
-		user-select: text;
-		cursor: text;
-	}
-
-	.new-task-input:focus {
-		border-color: var(--primary);
-		background: var(--surface);
-		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-	}
-
-	.category-select {
+	.enhanced-categories {
 		padding: 1rem;
-		border: 2px solid var(--border);
-		border-radius: 12px;
-		background: var(--surface);
-		outline: none;
-		cursor: pointer;
-		flex: 1;
-		min-width: 150px;
 	}
 
-	.add-task-btn {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 1rem 2rem;
-		background: linear-gradient(135deg, var(--primary), var(--secondary));
-		color: white;
-		border: none;
-		border-radius: 16px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		box-shadow: var(--shadow-colored);
+	.enhanced-category {
 		position: relative;
-		overflow: hidden;
-	}
-
-	.add-task-btn::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: -100%;
 		width: 100%;
-		height: 100%;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-		transition: left 0.5s ease;
-	}
-
-	.add-task-btn:hover::before {
-		left: 100%;
-	}
-
-	.add-task-btn:hover:not(:disabled) {
-		transform: translateY(-3px) scale(1.02);
-		box-shadow: var(--shadow-colored-lg);
-		background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
-	}
-
-	.add-task-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		transform: none;
-		box-shadow: var(--shadow);
-	}
-
-	.add-task-btn:disabled::before {
-		display: none;
-	}
-
-	/* Tasks */
-	.tasks-container {
-		flex: 1;
-		padding: 2rem;
-		overflow-y: auto;
-	}
-
-	.empty-state {
-		text-align: center;
-		padding: 4rem 2rem;
-		color: white;
-		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-	}
-
-	.empty-state h3 {
-		color: white;
-		font-size: 1.5rem;
+		padding: 1rem;
 		margin-bottom: 0.5rem;
-		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-	}
-
-	.empty-state p {
-		color: rgba(255, 255, 255, 0.9);
-		font-size: 1rem;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-	}
-
-	.empty-icon {
-		margin-bottom: 1rem;
+		border: none;
+		border-radius: 12px;
 		color: white;
-		opacity: 0.8;
-		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-	}
-
-	.empty-icon svg {
-		width: 48px;
-		height: 48px;
-	}
-
-	.tasks-list {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.task-item {
+		cursor: pointer;
+		transition: all 0.3s ease;
+		overflow: hidden;
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		padding: 1.5rem;
-		background: var(--surface);
-		border-radius: 20px;
-		border-left: 6px solid var(--category-color);
-		box-shadow: var(--shadow);
-		transition: all 0.3s ease;
-		cursor: grab;
-		position: relative;
-		overflow: hidden;
 	}
 
-	.task-item::before {
-		content: '';
+	.enhanced-category:hover {
+		transform: translateX(5px) scale(1.02);
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+	}
+
+	.enhanced-category.active {
+		transform: translateX(10px) scale(1.05);
+		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+	}
+
+	.category-glow {
 		position: absolute;
 		top: 0;
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: linear-gradient(135deg,
-			rgba(99, 102, 241, 0.02) 0%,
-			rgba(236, 72, 153, 0.02) 50%,
-			rgba(245, 158, 11, 0.02) 100%);
-		z-index: -1;
+		background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+		opacity: 0;
+		transition: opacity 0.3s ease;
 	}
 
-	.task-item:hover {
-		transform: translateY(-4px) scale(1.01);
-		box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-		border-left-width: 8px;
+	.enhanced-category:hover .category-glow {
+		opacity: 1;
 	}
 
-	.task-item:hover::before {
-		background: linear-gradient(135deg,
-			rgba(99, 102, 241, 0.05) 0%,
-			rgba(236, 72, 153, 0.05) 50%,
-			rgba(245, 158, 11, 0.05) 100%);
-	}
-
-	.task-item.completed {
-		opacity: 0.7;
-		background: var(--background);
-	}
-
-	.task-item.editing {
-		background: linear-gradient(135deg, var(--primary), transparent);
-		background-color: rgba(102, 126, 234, 0.05);
-	}
-
-	.task-checkbox {
-		width: 24px;
-		height: 24px;
-		border: 2px solid var(--border);
-		border-radius: 6px;
-		background: var(--surface);
-		cursor: pointer;
+	.category-info {
+		flex: 1;
 		display: flex;
+		justify-content: space-between;
 		align-items: center;
-		justify-content: center;
-		transition: all 0.2s ease;
+	}
+
+	.task-count {
+		background: rgba(255, 255, 255, 0.3);
+		padding: 0.25rem 0.75rem;
+		border-radius: 12px;
+		font-size: 0.875rem;
+		font-weight: bold;
+	}
+
+	.enhanced-main {
+		background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+		min-height: 100vh;
+	}
+
+	.enhanced-header {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		color: white;
+		padding: 2rem;
+		border-radius: 0 0 24px 24px;
+		margin-bottom: 2rem;
+		box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+	}
+
+	.page-title-container {
+		position: relative;
+		margin-bottom: 1rem;
+	}
+
+	.enhanced-title {
+		font-size: 2.5rem;
+		font-weight: 700;
+		margin: 0;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
+	.title-decoration {
+		height: 4px;
+		width: 100px;
+		background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+		border-radius: 2px;
+		margin-top: 0.5rem;
+	}
+
+	.enhanced-stats {
+		display: flex;
+		gap: 1.5rem;
+	}
+
+	.stat-card {
+		background: rgba(255, 255, 255, 0.2);
+		padding: 1rem 1.5rem;
+		border-radius: 12px;
+		backdrop-filter: blur(10px);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		transition: all 0.3s ease;
+	}
+
+	.stat-card:hover {
+		transform: translateY(-3px);
+		background: rgba(255, 255, 255, 0.3);
+	}
+
+	.stat-number {
+		font-size: 2rem;
+		font-weight: bold;
+		color: #fbbf24;
+	}
+
+	.stat-text {
+		font-size: 0.875rem;
+		opacity: 0.9;
+	}
+
+	.achievements-modal {
+		background: white;
+		border-radius: 20px;
+		padding: 2rem;
+		max-width: 600px;
+		width: 90vw;
+		max-height: 80vh;
+		overflow-y: auto;
+	}
+
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 2rem;
+		padding-bottom: 1rem;
+		border-bottom: 2px solid #f3f4f6;
+	}
+
+	.modal-header h2 {
+		margin: 0;
+		font-size: 1.75rem;
+		background: linear-gradient(45deg, #667eea, #764ba2);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	.close-btn {
+		background: none;
+		border: none;
+		font-size: 2rem;
+		cursor: pointer;
+		color: #6b7280;
+	}
+
+	.achievements-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.achievement-card {
+		padding: 1.5rem;
+		border-radius: 16px;
+		text-align: center;
+		transition: all 0.3s ease;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.achievement-card.unlocked {
+		background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+		color: white;
+		transform: scale(1.02);
+		box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+	}
+
+	.achievement-card:not(.unlocked) {
+		background: #f3f4f6;
+		color: #6b7280;
+	}
+
+	.achievement-icon {
+		font-size: 3rem;
+		margin-bottom: 1rem;
+	}
+
+	.achievement-card h3 {
+		margin: 0 0 0.5rem 0;
+		font-size: 1.25rem;
+	}
+
+	.achievement-card p {
+		margin: 0 0 1rem 0;
+		opacity: 0.9;
+	}
+
+	.unlocked-badge,
+	.locked-badge {
+		padding: 0.25rem 0.75rem;
+		border-radius: 12px;
+		font-size: 0.875rem;
+		font-weight: bold;
+	}
+
+	.unlocked-badge {
+		background: rgba(255, 255, 255, 0.3);
+		color: white;
+	}
+
+	.locked-badge {
+		background: #e5e7eb;
+		color: #6b7280;
+	}
+
+	@keyframes pulse {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.05); }
+	}
+
+	/* Enhanced styles for note-taking features */
+	.notes-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 1.5rem;
+		padding: 1.5rem;
+	}
+
+	.note-card {
+		background: white;
+		border-radius: 12px;
+		padding: 1.5rem;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		transition: all 0.3s ease;
+		border: 1px solid #e5e7eb;
+	}
+
+	.note-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+	}
+
+	.note-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: 1rem;
+	}
+
+	.note-title {
+		margin: 0;
+		font-size: 1.25rem;
 		font-weight: 600;
-	}
-
-	.task-checkbox.checked {
-		background: var(--primary);
-		border-color: var(--primary);
-	}
-
-	.task-content {
+		line-height: 1.3;
 		flex: 1;
 	}
 
-	.task-text {
-		font-size: 1rem;
-		color: var(--text);
-		margin-bottom: 0.5rem;
-		cursor: text;
-		line-height: 1.5;
+	.note-actions {
+		display: flex;
+		gap: 0.5rem;
+		opacity: 0;
+		transition: opacity 0.2s ease;
 	}
 
-	/* Rich text styling in tasks */
-	.task-text :global(h1),
-	.task-text :global(h2),
-	.task-text :global(h3) {
-		margin: 0.5rem 0;
-		font-size: 1rem;
-		font-weight: 600;
+	.note-card:hover .note-actions {
+		opacity: 1;
 	}
 
-	.task-text :global(p) {
-		margin: 0.25rem 0;
-	}
-
-	.task-text :global(ul),
-	.task-text :global(ol) {
-		margin: 0.25rem 0;
-		padding-left: 1rem;
-	}
-
-	.task-text :global(blockquote) {
-		border-left: 3px solid var(--primary);
-		padding-left: 0.75rem;
-		margin: 0.25rem 0;
-		font-style: italic;
-		opacity: 0.8;
-	}
-
-	.task-text :global(pre) {
-		background: var(--background);
-		padding: 0.5rem;
+	.edit-note-btn,
+	.delete-note-btn {
+		padding: 0.25rem;
+		border: none;
+		background: none;
+		cursor: pointer;
 		border-radius: 4px;
-		font-size: 0.875rem;
-		overflow-x: auto;
+		transition: background-color 0.2s ease;
 	}
 
-	.task-item.completed .task-text {
-		text-decoration: line-through;
-		color: var(--text-muted);
+	.edit-note-btn:hover {
+		background-color: #f3f4f6;
 	}
 
-	.edit-input {
-		width: 100%;
-		padding: 0.5rem;
-		border: 2px solid var(--primary);
-		border-radius: 8px;
-		font-size: 1rem;
-		outline: none;
-		background: var(--surface);
+	.delete-note-btn:hover {
+		background-color: #fee2e2;
+		color: #dc2626;
 	}
 
-	.task-meta {
+	.note-content {
+		line-height: 1.6;
+		margin-bottom: 1rem;
+		max-height: 150px;
+		overflow: hidden;
+	}
+
+	.note-meta {
 		display: flex;
-		gap: 1rem;
-		font-size: 0.75rem;
-		color: var(--text-muted);
-	}
-
-	.task-category {
-		display: flex;
+		justify-content: space-between;
 		align-items: center;
-		gap: 0.25rem;
+		font-size: 0.875rem;
+		color: #6b7280;
 	}
 
-	.task-actions {
+	.note-tags {
 		display: flex;
 		gap: 0.5rem;
 	}
 
-	.action-btn {
-		width: 32px;
-		height: 32px;
-		border: none;
-		border-radius: 8px;
-		cursor: pointer;
+	.tag {
+		background: #f3f4f6;
+		padding: 0.25rem 0.5rem;
+		border-radius: 12px;
+		font-size: 0.75rem;
+	}
+
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.5);
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		z-index: 1000;
+		backdrop-filter: blur(4px);
+	}
+
+	.note-editor-modal {
+		background: white;
+		border-radius: 16px;
+		width: 90vw;
+		max-width: 800px;
+		height: 80vh;
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+	}
+
+	.editor-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.5rem;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.note-title-input {
+		flex: 1;
+		border: none;
+		font-size: 1.5rem;
+		font-weight: 600;
+		outline: none;
+		margin-right: 1rem;
+	}
+
+	.editor-actions {
+		display: flex;
+		gap: 0.75rem;
+	}
+
+	.save-btn,
+	.cancel-btn {
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 500;
 		transition: all 0.2s ease;
+	}
+
+	.save-btn {
+		background: #3b82f6;
+		color: white;
+	}
+
+	.save-btn:hover {
+		background: #2563eb;
+	}
+
+	.cancel-btn {
+		background: #f3f4f6;
+		color: #374151;
+	}
+
+	.cancel-btn:hover {
+		background: #e5e7eb;
+	}
+
+	.formatting-toolbar {
+		display: flex;
+		gap: 1rem;
+		padding: 1rem 1.5rem;
+		border-bottom: 1px solid #e5e7eb;
+		flex-wrap: wrap;
+		background: #f9fafb;
+	}
+
+	.format-group {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.format-btn {
+		padding: 0.5rem;
+		border: 1px solid #d1d5db;
+		background: white;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		min-width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.format-btn:hover {
+		background: #f3f4f6;
+		border-color: #9ca3af;
+	}
+
+	.font-size-slider {
+		width: 80px;
+	}
+
+	.font-size-display {
 		font-size: 0.875rem;
+		color: #6b7280;
+		min-width: 35px;
 	}
 
-	.action-btn.edit {
-		background: rgba(254, 202, 87, 0.1);
-		color: #f39c12;
+	.color-picker {
+		width: 32px;
+		height: 32px;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
 	}
 
-	.action-btn.delete {
-		background: rgba(255, 107, 107, 0.1);
-		color: #e74c3c;
+	.note-content-editor {
+		flex: 1;
+		padding: 1.5rem;
+		border: none;
+		outline: none;
+		resize: none;
+		line-height: 1.6;
+		font-family: inherit;
 	}
 
-	.action-btn.save {
-		background: rgba(76, 175, 80, 0.1);
-		color: #27ae60;
+	.formula-editor,
+	.formula-editor-inline {
+		display: flex;
+		gap: 0.75rem;
+		padding: 1rem 1.5rem;
+		background: #f9fafb;
+		border-top: 1px solid #e5e7eb;
+		align-items: center;
 	}
 
-	.action-btn.cancel {
-		background: rgba(158, 158, 158, 0.1);
-		color: #7f8c8d;
+	.formula-input,
+	.formula-input-inline {
+		flex: 1;
+		padding: 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		font-family: 'Courier New', monospace;
 	}
 
-	.action-btn:hover {
-		transform: scale(1.1);
-		opacity: 0.8;
+	.add-formula-btn,
+	.add-formula-btn-inline {
+		padding: 0.5rem 1rem;
+		background: #10b981;
+		color: white;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+		font-weight: 500;
 	}
 
-	/* Responsive */
-	@media (max-width: 1024px) {
-		.sidebar {
-			width: 240px;
-		}
+	.add-formula-btn:hover,
+	.add-formula-btn-inline:hover {
+		background: #059669;
 	}
 
-	@media (max-width: 768px) {
-		.workspace-container {
-			flex-direction: column;
-		}
-		
-		.sidebar {
-			width: 100%;
-			height: auto;
-		}
-		
-		.content-header {
-			flex-direction: column;
-			align-items: stretch;
-		}
-		
-		.header-actions {
-			justify-content: stretch;
-		}
-		
-		.search-input {
-			width: 100%;
-		}
-		
-		.add-task-form {
-			flex-direction: column;
-		}
-		
-		.new-task-input {
-			min-width: auto;
-		}
+	.cancel-formula-btn {
+		padding: 0.5rem 1rem;
+		background: #f3f4f6;
+		color: #374151;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+	}
+
+	.editor-footer {
+		padding: 1rem 1.5rem;
+		border-top: 1px solid #e5e7eb;
+		background: #f9fafb;
+	}
+
+	.note-stats {
+		font-size: 0.875rem;
+		color: #6b7280;
+	}
+
+	.create-note-btn {
+		background: #8b5cf6;
+		color: white;
+		border: none;
+		padding: 0.5rem 1rem;
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 500;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		transition: all 0.2s ease;
+	}
+
+	.create-note-btn:hover {
+		background: #7c3aed;
+	}
+
+	.create-first-note-btn {
+		background: #3b82f6;
+		color: white;
+		border: none;
+		padding: 0.75rem 1.5rem;
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 500;
+		margin-top: 1rem;
+	}
+
+	.create-first-note-btn:hover {
+		background: #2563eb;
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: 3rem;
+		color: #6b7280;
+	}
+
+	.empty-icon {
+		font-size: 3rem;
+		margin-bottom: 1rem;
 	}
 </style>
