@@ -9,6 +9,19 @@
 	let isConnecting = $state(false);
 	let errorMessage = $state('');
 	let showApiKey = $state(false);
+	let titleElement = $state(null);
+	let subtitleElement = $state(null);
+	let featuresElement = $state(null);
+	let isVisible = $state(false);
+	let scrollY = $state(0);
+	let mouseX = $state(0);
+	let mouseY = $state(0);
+	let particles = $state([]);
+
+	// Typing effect for hero title
+	let displayTitle = $state('');
+	let titleComplete = $state(false);
+	const fullTitle = 'TaskFlow';
 
 	async function startApp() {
 		if (userName.trim() && apiKey.trim()) {
@@ -147,6 +160,52 @@
 		}
 	}
 
+	// Initialize particles for background animation
+	function initParticles() {
+		particles = Array.from({ length: 50 }, (_, i) => ({
+			id: i,
+			x: Math.random() * 100,
+			y: Math.random() * 100,
+			size: Math.random() * 3 + 1,
+			speed: Math.random() * 0.5 + 0.1,
+			opacity: Math.random() * 0.6 + 0.2
+		}));
+	}
+
+	// Animate particles
+	function animateParticles() {
+		particles = particles.map(particle => ({
+			...particle,
+			y: (particle.y + particle.speed) % 100,
+			x: particle.x + Math.sin(Date.now() * 0.001 + particle.id) * 0.02
+		}));
+	}
+
+	// Typing effect
+	function startTypingEffect() {
+		let i = 0;
+		const typeInterval = setInterval(() => {
+			if (i < fullTitle.length) {
+				displayTitle = fullTitle.slice(0, i + 1);
+				i++;
+			} else {
+				titleComplete = true;
+				clearInterval(typeInterval);
+			}
+		}, 150);
+	}
+
+	// Scroll progress
+	function updateScrollProgress() {
+		const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+		const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+		const scrolled = (winScroll / height) * 100;
+		
+		if (typeof window !== 'undefined') {
+			document.documentElement.style.setProperty('--scroll-progress', scrolled + '%');
+		}
+	}
+
 	onMount(() => {
 		const savedName = localStorage.getItem('userName');
 		const pineconeConnected = localStorage.getItem('pineconeConnected');
@@ -155,27 +214,156 @@
 		if (savedName && pineconeConnected && apiKey) {
 			goto('/workspace');
 		}
+
+		// Initialize animations
+		isVisible = true;
+		initParticles();
+		startTypingEffect();
+
+		// Particle animation loop
+		const particleInterval = setInterval(animateParticles, 50);
+
+		// Scroll event listener
+		const handleScroll = () => {
+			scrollY = window.scrollY;
+			updateScrollProgress();
+		};
+
+		// Mouse move event listener
+		const handleMouseMove = (e) => {
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+		};
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener('scroll', handleScroll);
+			window.addEventListener('mousemove', handleMouseMove);
+		}
+
+		// Intersection Observer for scroll animations
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					entry.target.classList.add('animate-in');
+				}
+			});
+		}, { threshold: 0.1 });
+
+		// Observe feature elements
+		const featureItems = document.querySelectorAll('.feature-item');
+		featureItems.forEach(item => observer.observe(item));
+
+		return () => {
+			clearInterval(particleInterval);
+			if (typeof window !== 'undefined') {
+				window.removeEventListener('scroll', handleScroll);
+				window.removeEventListener('mousemove', handleMouseMove);
+			}
+			observer.disconnect();
+		};
 	});
 </script>
 
+<svelte:window bind:scrollY />
+
+<!-- Scroll Progress Indicator -->
+<div class="scroll-progress"></div>
+
 <div class="welcome-container">
+	<!-- Animated Background Particles -->
+	<div class="particles-container">
+		{#each particles as particle (particle.id)}
+			<div 
+				class="particle"
+				style="
+					left: {particle.x}%;
+					top: {particle.y}%;
+					width: {particle.size}px;
+					height: {particle.size}px;
+					opacity: {particle.opacity};
+				"
+			></div>
+		{/each}
+	</div>
+
+	<!-- Animated Background SVG Elements -->
+	<div class="background-shapes">
+		<svg class="bg-shape shape-1" viewBox="0 0 200 200">
+			<defs>
+				<linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.3" />
+					<stop offset="100%" style="stop-color:#4ecdc4;stop-opacity:0.1" />
+				</linearGradient>
+			</defs>
+			<path d="M50,50 Q150,30 150,150 Q30,150 50,50" fill="url(#gradient1)" />
+		</svg>
+		
+		<svg class="bg-shape shape-2" viewBox="0 0 200 200">
+			<defs>
+				<linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.2" />
+					<stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0.1" />
+				</linearGradient>
+			</defs>
+			<circle cx="100" cy="100" r="60" fill="url(#gradient2)" />
+		</svg>
+
+		<svg class="bg-shape shape-3" viewBox="0 0 200 200">
+			<defs>
+				<linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.2" />
+					<stop offset="100%" style="stop-color:#10b981;stop-opacity:0.1" />
+				</linearGradient>
+			</defs>
+			<polygon points="100,20 180,180 20,180" fill="url(#gradient3)" />
+		</svg>
+	</div>
+
 	<div class="hero-section">
 		<div class="floating-elements">
-			<div class="floating-card card-1"></div>
-			<div class="floating-card card-2"></div>
-			<div class="floating-card card-3"></div>
+			<div class="floating-card card-1" style="transform: translateY({scrollY * 0.1}px)">
+				<div class="card-glow"></div>
+			</div>
+			<div class="floating-card card-2" style="transform: translateY({scrollY * -0.05}px) translateX({Math.sin(scrollY * 0.01) * 10}px)">
+				<div class="card-glow"></div>
+			</div>
+			<div class="floating-card card-3" style="transform: translateY({scrollY * 0.08}px) rotate({scrollY * 0.1}deg)">
+				<div class="card-glow"></div>
+			</div>
 		</div>
 		
-		<div class="main-content">
-			<h1 class="title">TaskFlow</h1>
-			<p class="subtitle">Your beautiful, organized workspace for everything</p>
+		<div class="main-content" class:visible={isVisible}>
+			<!-- Animated Hero Illustration -->
+			<div class="hero-illustration">
+				<svg class="floating-orb" viewBox="0 0 100 100">
+					<defs>
+						<radialGradient id="orbGradient">
+							<stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8" />
+							<stop offset="100%" style="stop-color:#6366f1;stop-opacity:0.3" />
+						</radialGradient>
+					</defs>
+					<circle cx="50" cy="50" r="30" fill="url(#orbGradient)" class="pulse" />
+					<circle cx="50" cy="50" r="20" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" class="orbit-ring" />
+					<circle cx="50" cy="50" r="35" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5" class="orbit-ring-outer" />
+				</svg>
+			</div>
+
+			<h1 bind:this={titleElement} class="title typewriter">
+				{displayTitle}<span class="cursor" class:hidden={titleComplete}>|</span>
+			</h1>
 			
-			<div class="input-container">
+			<p bind:this={subtitleElement} class="subtitle animated-subtitle" class:fade-in={titleComplete}>
+				{#each 'Your beautiful, organized workspace for everything'.split(' ') as word, i}
+					<span class="word" style="animation-delay: {titleComplete ? i * 0.1 + 0.5 : 0}s">{word}</span>
+				{/each}
+			</p>
+			
+			<div class="input-container glass-morphism" class:slide-up={titleComplete}>
 				<input
 					type="text"
 					placeholder="What's your name?"
 					bind:value={userName}
-					class="name-input"
+					class="name-input animated-input"
 					onkeypress={(e) => e.key === 'Enter' && document.querySelector('.api-input').focus()}
 				/>
 				<div class="api-input-container">
@@ -183,17 +371,17 @@
 						type={showApiKey ? 'text' : 'password'}
 						placeholder="Enter your Pinecone.io API key (e.g., pcsk_...)"
 						bind:value={apiKey}
-						class="api-input"
+						class="api-input animated-input"
 						onkeypress={(e) => e.key === 'Enter' && startApp()}
 					/>
-					<button type="button" class="toggle-api-visibility" onclick={() => showApiKey = !showApiKey}>
+					<button type="button" class="toggle-api-visibility icon-hover" onclick={() => showApiKey = !showApiKey}>
 						{#if showApiKey}
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-animate">
 								<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
 								<line x1="1" y1="1" x2="23" y2="23"/>
 							</svg>
 						{:else}
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-animate">
 								<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
 								<circle cx="12" cy="12" r="3"/>
 							</svg>
@@ -201,70 +389,71 @@
 					</button>
 				</div>
 				{#if errorMessage}
-					<div class="error-message">{errorMessage}</div>
+					<div class="error-message animate-shake">{errorMessage}</div>
 				{/if}
 				{#if isConnecting}
-					<div class="info-message">
+					<div class="info-message pulse-glow">
 						<span class="loading-spinner"></span>
 						Testing API connection and validating user...
 					</div>
 				{/if}
-				<button class="start-button" onclick={startApp} disabled={!userName.trim() || !apiKey.trim() || isConnecting}>
+				<button class="start-button gradient-button" onclick={startApp} disabled={!userName.trim() || !apiKey.trim() || isConnecting}>
 					{#if isConnecting}
 						<span class="loading-spinner"></span>
 						Connecting to Pinecone...
 					{:else}
 						Connect & Get Started
+						<span class="button-shine"></span>
 					{/if}
 				</button>
-				<div class="api-info">
-					<p><strong>🔗 Get your Pinecone API key:</strong></p>
-					<p>1. Go to <a href="https://pinecone.io" target="_blank" rel="noopener">pinecone.io</a></p>
+				<div class="api-info glass-card">
+					<p><strong class="highlight-text">🔗 Get your Pinecone API key:</strong></p>
+					<p>1. Go to <a href="https://pinecone.io" target="_blank" rel="noopener" class="glow-link">pinecone.io</a></p>
 					<p>2. Sign in to your account</p>
 					<p>3. Navigate to API Keys section</p>
 					<p>4. Copy your API key (starts with "pcsk_")</p>
 				</div>
 			</div>
 			
-			<div class="features-preview">
-				<div class="feature-item">
-					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+			<div bind:this={featuresElement} class="features-preview">
+				<div class="feature-item glass-card" data-tilt>
+					<div class="feature-icon animated-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="draw-svg">
 							<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
 							<path d="M15 5l4 4"/>
 						</svg>
 					</div>
-					<span>Rich Text Editing</span>
+					<span class="feature-text">Rich Text Editing</span>
 				</div>
-				<div class="feature-item">
-					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<div class="feature-item glass-card" data-tilt>
+					<div class="feature-icon animated-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="draw-svg">
 							<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
 							<polyline points="9,22 9,12 15,12 15,22"/>
 							<rect x="7" y="14" width="2" height="2"/>
 							<rect x="15" y="14" width="2" height="2"/>
 						</svg>
 					</div>
-					<span>Organize & Categorize</span>
+					<span class="feature-text">Organize & Categorize</span>
 				</div>
-				<div class="feature-item">
-					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<div class="feature-item glass-card" data-tilt>
+					<div class="feature-icon animated-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="draw-svg">
 							<circle cx="11" cy="11" r="8"/>
 							<path d="m21 21-4.35-4.35"/>
 						</svg>
 					</div>
-					<span>Powerful Search</span>
+					<span class="feature-text">Powerful Search</span>
 				</div>
-				<div class="feature-item">
-					<div class="feature-icon">
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<div class="feature-item glass-card" data-tilt>
+					<div class="feature-icon animated-icon">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="draw-svg">
 							<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
 							<line x1="8" y1="21" x2="16" y2="21"/>
 							<line x1="12" y1="17" x2="12" y2="21"/>
 						</svg>
 					</div>
-					<span>Responsive Design</span>
+					<span class="feature-text">Responsive Design</span>
 				</div>
 			</div>
 		</div>
@@ -272,6 +461,18 @@
 </div>
 
 <style>
+	/* Scroll Progress Indicator */
+	.scroll-progress {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: var(--scroll-progress, 0%);
+		height: 4px;
+		background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #f39c12);
+		z-index: 1000;
+		transition: width 0.25s ease;
+	}
+
 	.welcome-container {
 		min-height: 100vh;
 		background: linear-gradient(135deg,
@@ -296,13 +497,87 @@
 		100% { background-position: 0% 50%; }
 	}
 
+	/* Animated Background Particles */
+	.particles-container {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	.particle {
+		position: absolute;
+		background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+		border-radius: 50%;
+		animation: particleFloat 3s ease-in-out infinite;
+	}
+
+	@keyframes particleFloat {
+		0%, 100% { transform: translateY(0px) scale(1); }
+		50% { transform: translateY(-10px) scale(1.1); }
+	}
+
+	/* Background Shapes */
+	.background-shapes {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		z-index: 1;
+	}
+
+	.bg-shape {
+		position: absolute;
+		width: 200px;
+		height: 200px;
+		opacity: 0.3;
+	}
+
+	.shape-1 {
+		top: 10%;
+		left: 5%;
+		animation: morphShape 8s ease-in-out infinite;
+	}
+
+	.shape-2 {
+		top: 60%;
+		right: 10%;
+		animation: rotateShape 10s linear infinite;
+	}
+
+	.shape-3 {
+		bottom: 20%;
+		left: 15%;
+		animation: pulseShape 6s ease-in-out infinite;
+	}
+
+	@keyframes morphShape {
+		0%, 100% { transform: scale(1) rotate(0deg); }
+		50% { transform: scale(1.2) rotate(180deg); }
+	}
+
+	@keyframes rotateShape {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	@keyframes pulseShape {
+		0%, 100% { transform: scale(1); opacity: 0.3; }
+		50% { transform: scale(1.5); opacity: 0.1; }
+	}
+
 	.floating-elements {
 		position: absolute;
 		top: 0;
 		left: 0;
 		width: 100%;
 		height: 100%;
-		z-index: -1;
+		z-index: 2;
 		pointer-events: none;
 	}
 
@@ -312,6 +587,22 @@
 		border-radius: 20px;
 		backdrop-filter: blur(10px);
 		border: 1px solid rgba(255, 255, 255, 0.2);
+		overflow: hidden;
+	}
+
+	.card-glow {
+		position: absolute;
+		top: -50%;
+		left: -50%;
+		width: 200%;
+		height: 200%;
+		background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+		animation: cardGlow 4s ease-in-out infinite;
+	}
+
+	@keyframes cardGlow {
+		0%, 100% { opacity: 0.3; transform: scale(1); }
+		50% { opacity: 0.7; transform: scale(1.1); }
 	}
 
 	.card-1 {
@@ -354,6 +645,62 @@
 		box-sizing: border-box;
 	}
 
+	/* Hero Illustration */
+	.hero-illustration {
+		position: relative;
+		width: 100px;
+		height: 100px;
+		margin: 0 auto 2rem;
+		z-index: 15;
+	}
+
+	.floating-orb {
+		width: 100%;
+		height: 100%;
+		animation: orbFloat 4s ease-in-out infinite;
+	}
+
+	.pulse {
+		animation: orbPulse 2s ease-in-out infinite;
+	}
+
+	.orbit-ring {
+		animation: orbitRing 8s linear infinite;
+		transform-origin: center;
+	}
+
+	.orbit-ring-outer {
+		animation: orbitRing 12s linear infinite reverse;
+		transform-origin: center;
+	}
+
+	@keyframes orbFloat {
+		0%, 100% { transform: translateY(0px) scale(1); }
+		50% { transform: translateY(-10px) scale(1.05); }
+	}
+
+	@keyframes orbPulse {
+		0%, 100% { opacity: 0.8; }
+		50% { opacity: 0.4; }
+	}
+
+	@keyframes orbitRing {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	.main-content {
+		opacity: 0;
+		transform: translateY(30px);
+		transition: all 1s ease;
+	}
+
+	.main-content.visible {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	/* Typing Effect */
 	.title {
 		font-size: clamp(3rem, 8vw, 6rem);
 		font-weight: 800;
@@ -361,8 +708,29 @@
 		margin-bottom: 1rem;
 		text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 		letter-spacing: -2px;
+		position: relative;
 	}
 
+	.typewriter {
+		overflow: hidden;
+		white-space: nowrap;
+	}
+
+	.cursor {
+		color: #ff6b6b;
+		animation: blink 1s infinite;
+	}
+
+	.cursor.hidden {
+		opacity: 0;
+	}
+
+	@keyframes blink {
+		0%, 50% { opacity: 1; }
+		51%, 100% { opacity: 0; }
+	}
+
+	/* Animated Subtitle */
 	.subtitle {
 		font-size: clamp(1.2rem, 3vw, 1.5rem);
 		color: rgba(255, 255, 255, 0.9);
@@ -371,19 +739,55 @@
 		line-height: 1.6;
 	}
 
-	.input-container {
+	.animated-subtitle .word {
+		display: inline-block;
+		opacity: 0;
+		margin-right: 0.3em;
+		animation: wordFadeIn 0.6s ease forwards;
+	}
+
+	@keyframes wordFadeIn {
+		0% {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		100% {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	/* Glass Morphism Effects */
+	.glass-morphism {
 		background: rgba(255, 255, 255, 0.15);
 		backdrop-filter: blur(20px);
 		border-radius: 25px;
-		padding: 1.5rem;
-		margin-bottom: 3rem;
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-		position: relative;
-		z-index: 15;
 	}
 
-	.name-input {
+	.glass-card {
+		background: rgba(255, 255, 255, 0.1);
+		backdrop-filter: blur(10px);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.input-container {
+		padding: 1.5rem;
+		margin-bottom: 3rem;
+		position: relative;
+		z-index: 15;
+		opacity: 0;
+		transform: translateY(30px);
+		transition: all 0.8s ease;
+	}
+
+	.input-container.slide-up {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.animated-input {
 		width: 100%;
 		padding: 1rem 1.5rem;
 		border: none;
@@ -399,9 +803,9 @@
 		cursor: text;
 	}
 
-	.name-input:focus {
+	.animated-input:focus {
 		background: white;
-		box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(99, 102, 241, 0.2);
 		transform: translateY(-2px);
 	}
 
@@ -429,7 +833,7 @@
 
 	.api-input:focus {
 		background: white;
-		box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(99, 102, 241, 0.2);
 		transform: translateY(-2px);
 	}
 
@@ -451,9 +855,23 @@
 		transition: all 0.2s ease;
 	}
 
-	.toggle-api-visibility:hover {
+	.icon-hover:hover {
 		background: rgba(0, 0, 0, 0.05);
 		color: #374151;
+		transform: translateY(-50%) scale(1.1);
+	}
+
+	.icon-animate {
+		transition: all 0.3s ease;
+	}
+
+	.icon-hover:hover .icon-animate {
+		animation: iconBounce 0.6s ease;
+	}
+
+	@keyframes iconBounce {
+		0%, 100% { transform: scale(1); }
+		50% { transform: scale(1.2); }
 	}
 
 	.error-message {
@@ -465,6 +883,16 @@
 		border: 1px solid rgba(239, 68, 68, 0.2);
 		font-size: 0.9rem;
 		text-align: center;
+	}
+
+	.animate-shake {
+		animation: shake 0.5s ease-in-out;
+	}
+
+	@keyframes shake {
+		0%, 100% { transform: translateX(0); }
+		25% { transform: translateX(-5px); }
+		75% { transform: translateX(5px); }
 	}
 
 	.info-message {
@@ -482,28 +910,45 @@
 		gap: 0.5rem;
 	}
 
+	.pulse-glow {
+		animation: pulseGlow 2s ease-in-out infinite;
+	}
+
+	@keyframes pulseGlow {
+		0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
+		50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+	}
+
 	.api-info {
-		background: rgba(255, 255, 255, 0.1);
 		padding: 1rem;
 		border-radius: 15px;
 		margin-top: 1rem;
 		font-size: 0.85rem;
 		color: rgba(255, 255, 255, 0.9);
-		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.api-info p {
 		margin: 0.5rem 0;
 	}
 
-	.api-info a {
+	.glow-link {
 		color: #60a5fa;
 		text-decoration: none;
 		font-weight: 600;
+		position: relative;
+		transition: all 0.3s ease;
 	}
 
-	.api-info a:hover {
+	.glow-link:hover {
 		text-decoration: underline;
+		text-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+	}
+
+	.highlight-text {
+		background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
 	}
 
 	.loading-spinner {
@@ -521,6 +966,7 @@
 		to { transform: rotate(360deg); }
 	}
 
+	/* Gradient Button */
 	.start-button {
 		width: 100%;
 		padding: 1rem 2rem;
@@ -535,11 +981,31 @@
 		box-shadow: 0 10px 25px rgba(238, 90, 36, 0.3);
 		position: relative;
 		z-index: 20;
+		overflow: hidden;
+	}
+
+	.gradient-button {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.button-shine {
+		position: absolute;
+		top: 0;
+		left: -100%;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+		transition: left 0.6s;
 	}
 
 	.start-button:hover:not(:disabled) {
 		transform: translateY(-3px);
 		box-shadow: 0 15px 35px rgba(238, 90, 36, 0.4);
+	}
+
+	.start-button:hover:not(:disabled) .button-shine {
+		left: 100%;
 	}
 
 	.start-button:disabled {
@@ -558,18 +1024,37 @@
 	}
 
 	.feature-item {
-		background: rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(10px);
 		border-radius: 15px;
 		padding: 1.5rem 1rem;
-		border: 1px solid rgba(255, 255, 255, 0.2);
 		transition: all 0.3s ease;
 		color: white;
+		opacity: 0;
+		transform: translateY(50px);
+		cursor: pointer;
+		position: relative;
+		overflow: hidden;
 	}
 
+	/* Scroll-triggered animations */
+	.feature-item.animate-in {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	.feature-item:nth-child(1).animate-in { animation-delay: 0.1s; }
+	.feature-item:nth-child(2).animate-in { animation-delay: 0.2s; }
+	.feature-item:nth-child(3).animate-in { animation-delay: 0.3s; }
+	.feature-item:nth-child(4).animate-in { animation-delay: 0.4s; }
+
 	.feature-item:hover {
-		transform: translateY(-5px);
+		transform: translateY(-10px) scale(1.05);
 		background: rgba(255, 255, 255, 0.15);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+	}
+
+	/* 3D Tilt Effect */
+	.feature-item[data-tilt]:hover {
+		transform: perspective(1000px) rotateY(10deg) rotateX(10deg) translateY(-10px);
 	}
 
 	.feature-icon {
@@ -583,14 +1068,44 @@
 		background: rgba(255, 255, 255, 0.1);
 		border-radius: 12px;
 		color: white;
+		position: relative;
+		overflow: hidden;
 	}
 
-	.feature-icon svg {
-		width: 24px;
-		height: 24px;
-		stroke: currentColor;
-		stroke-width: 2;
-		fill: none;
+	.animated-icon {
+		transition: all 0.3s ease;
+	}
+
+	.feature-item:hover .animated-icon {
+		transform: scale(1.1) rotate(5deg);
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	/* SVG Drawing Animation */
+	.draw-svg {
+		stroke-dasharray: 100;
+		stroke-dashoffset: 100;
+	}
+
+	.feature-item.animate-in .draw-svg {
+		animation: drawSVG 1s ease forwards;
+	}
+
+	@keyframes drawSVG {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	.feature-text {
+		display: block;
+		transition: all 0.3s ease;
+	}
+
+	.feature-item:hover .feature-text {
+		transform: translateY(-2px);
+		color: #fff;
+		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 	}
 
 	@media (max-width: 768px) {
@@ -624,6 +1139,37 @@
 
 		.floating-card {
 			display: none;
+		}
+
+		.bg-shape {
+			width: 120px;
+			height: 120px;
+		}
+
+		.hero-illustration {
+			width: 80px;
+			height: 80px;
+		}
+
+		.particles-container {
+			display: none;
+		}
+	}
+
+	/* Reduced motion preferences */
+	@media (prefers-reduced-motion: reduce) {
+		.floating-card,
+		.particle,
+		.bg-shape,
+		.floating-orb,
+		.orbit-ring,
+		.orbit-ring-outer,
+		.button-shine {
+			animation: none;
+		}
+		
+		.feature-item:hover {
+			transform: translateY(-5px) scale(1.02);
 		}
 	}
 </style>
